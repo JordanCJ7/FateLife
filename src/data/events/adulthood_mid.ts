@@ -832,81 +832,234 @@ const CAREER_GATED_EVENTS: MidScenarioDef[] = [
 ];
 
 // Topics for general mid-life transitions (Ages 26-45)
-const MID_GENERAL_TOPICS = [
-  { theme: "First Mortgage Pitch", good: "building a clean 20% down payment deposit", bad: "leveraging your credit card limits for luxury hot tubs" },
-  { theme: "Family Vacation Plan", good: "booking early low-cost local lodges", bad: "renting premium luxury yachts on high interest credit" },
-  { theme: "Gym Body Rebuild", good: "eating fresh vegetables and swimming slow laps", bad: "buying dubious chemical muscle growth pills" },
-  { theme: "The Neighborhood HOA", good: "painting your fence matching beige limits", bad: "installing a giant fluorescent wind-turbine on your lawn" },
-  { theme: "Anniversary Surprise", good: "cooking their favorite handmade soup recipes", bad: "gifting them an automated vacuum dust cleaner" },
-  { theme: "Backyard Barbecue Fire", good: "using low coal embers and keeping fire blankets near", bad: "spraying combustible lighter gel onto live charcoal" },
-  { theme: "Taxes Management Audit", good: "hiring meticulous registered tax practitioners", bad: "writing down your dog as a dependent relative" },
-  { theme: "Retirement Savings Pot", good: "indexing cash funds each month", bad: "sinking your life savings into unstable meme token schemes" },
-  { theme: "School Parent-Tech Meeting", good: "volunteering to organize local digital class schedules", bad: "complaining loudly about cafeteria cookie portion limits" },
-  { theme: "Neighbor Noise Matter", good: "offering fresh cookies and asking politely for peace", bad: "banging on their brick drywall with bowling pins" },
-  { theme: "The Stolen Grill", good: "calling your insurance desk for replacement checks", bad: "running down alleys carrying backyard pool nets" }
+const MID_THEMES = [
+  {
+    category: "Suburban Home Care",
+    nouns: ["smart thermostat panel", "leaking garden pool filter", "creaky garage door motor", "wooden tool storage shed", "low-flow showerhead adapter"],
+    under35: [
+      { text: "Fix the [Noun] yourself using online tutorials and cheap tools.", log: "You DIY-repaired your [Noun] with online videos.", outcome: "You scraped your knuckles, but the repair succeeded completely! You saved clean money.", adjust: { smarts: 15, cash: -120, stress: 10, happiness: 10 } },
+      { text: "Hire a licensed master contractor to install a premium replacement for the [Noun].", log: "You hired a professional contractor for the [Noun].", outcome: "Flawless, licensed execution! It drained your cash balance, but your domestic stress vanished.", adjust: { cash: -1200, stress: -25, happiness: 15, looks: 5 } },
+      { text: "Ignore the signs of wear on the [Noun], hoping it resolves itself.", log: "You deferred maintenance work on the [Noun].", outcome: "The issue worsened overnight, triggering a minor floor flood. A painful reminder of decay.", adjust: { health: -5, stress: 20, happiness: -15, smarts: -5 } }
+    ],
+    over35: [
+      { text: "Upgrade the [Noun] to a top-tier voice-activated digital system.", log: "You smart-upgraded your home [Noun].", outcome: "Absolute convenience! Guests are green with envy at your glowing domestic automation.", adjust: { cash: -1800, happiness: 20, looks: 10, stress: -15 } },
+      { text: "Confront your next-door neighbor, accusing them of disrupting your [Noun].", log: "You blamed the neighbor for issues with the [Noun].", outcome: "They slam their screen door on your face, and the neighborhood alliance calls you a crank.", adjust: { karma: -20, stress: 25, happiness: -10 } }
+    ]
+  },
+  {
+    category: "Parenting Challenges",
+    nouns: ["smart digital baby monitor", "children’s advanced gaming system", "neighborhood math tutoring schedule", "wooden backyard treehouse beam", "kids' double-deck sports stroller"],
+    under35: [
+      { text: "Dedicate continuous hours to reading and caring near the [Noun] with patience.", log: "You invested patient time into caring for family near the [Noun].", outcome: "The children squeal with absolute delight, and their growth is exceptionally healthy.", adjust: { karma: 20, happiness: 25, health: -5, stress: 12 } },
+      { text: "Bribe a relative or sibling to handle the [Noun] supervision for the evening.", log: "You paid a babysitter to monitor the [Noun] activities.", outcome: "You enjoyed a quiet, relaxing date night! Your wallet is lighter but romance is active.", adjust: { cash: -150, happiness: 20, stress: -20 } },
+      { text: "Slip on noise-canceling headphones to drown out arguments over the [Noun].", log: "You masked domestic noise around the [Noun] with audio filters.", outcome: "The immediate stress goes down, but your partner glares at you with terrifying intensity.", adjust: { karma: -15, stress: -10, happiness: 5 } }
+    ],
+    over35: [
+      { text: "Incur heavy academy tutoring expenses for premium advancement near the [Noun].", log: "You financed advanced tutoring modules related to the [Noun].", outcome: "They ace their exams! Your pride soars, although the premium bills are staggering.", adjust: { cash: -3500, smarts: 20, happiness: 15 } },
+      { text: "Enroll the children in highly active sports programs featuring the [Noun].", log: "You organized active athletic training using the [Noun].", outcome: "Their physical conditioning surges, and your weekend drives are filled with cheerful bonding.", adjust: { cash: -600, health: 12, happiness: 20, stress: 10 } }
+    ]
+  },
+  {
+    category: "Financial Portfolios",
+    nouns: ["unstable viral cryptocurrency wallet", "high-interest premium cash deposit", "sketchy local real estate flyer", "vintage classic comic collection", "government-backed series-I bond"],
+    under35: [
+      { text: "Allocate a small, safe portion of your monthly savings into the [Noun] steadily.", log: "You allocated safe monthly funds into the [Noun].", outcome: "Compound dividends grow slowly but securely. You sleep in absolute financial safety.", adjust: { smarts: 12, cash: -400, stress: -10, happiness: 10 } },
+      { text: "Dump your entire liquid emergency savings directly into the [Noun] to double it.", log: "You gambled high stakes of liquid capital into the [Noun].", outcome: "Extreme market swings! Your blood pressure spikes, and your finance app flashes bold warning lines.", adjust: { health: -8, happiness: 15, stress: 30, cash: -3000, karma: -10 } },
+      { text: "Sought professional advisory assessments from a certified planner regarding the [Noun].", log: "You hired financial planners to restructure the [Noun].", outcome: "They construct a bulletproof, tax-efficient hedge. You are fully aligned with industry guidelines.", adjust: { smarts: 20, cash: -300, stress: -15 } }
+    ],
+    over35: [
+      { text: "Hedge your long-term retirement assets by adding the [Noun] to your private entity.", log: "You integrated the [Noun] into private family holdings.", outcome: "Your overall wealth rating rises, securing deep status and security for your aging relatives.", adjust: { cash: -8000, smarts: 15, happiness: 20 } },
+      { text: "Speculate aggressively on short-term derivative positions based on the [Noun].", log: "You ran aggressive speculative trades on the [Noun].", outcome: "A sudden regulatory announcement wipes out $5,000 cash. Your tax logs look extremely messy.", adjust: { cash: -5000, stress: 25, happiness: -20, karma: -15 } }
+    ]
+  },
+  {
+    category: "Fitness & Recovery",
+    nouns: ["carbon-foam running shoes", "rusty adjustable dumbbell rack", "premium health tracking smartwatch", "organic vegan protein tub", "adjustable orthopaedic desk chair"],
+    under35: [
+      { text: "Force yourself to complete demanding daily exercise circuits with your [Noun].", log: "You completed vigorous, strict sweat workouts using the [Noun].", outcome: "Your core stamina doubles! Your muscles are rock-hard, and you turn heads at local beaches.", adjust: { health: 22, looks: 15, stress: -10, happiness: 20 } },
+      { text: "Hit the snooze button on your alarm, ignoring the [Noun] in favor of sweet sleep.", log: "You skipped physical exercises and let the [Noun] gather dust.", outcome: "You wake up sluggish and bloated, carrying mild guilt about your physical stagnation.", adjust: { health: -8, looks: -5, stress: -15, happiness: 10 } },
+      { text: "Retain a certified personal trainer to design active routines around the [Noun].", log: "You hired certified training guidance centered around the [Noun].", outcome: "They push you to absolute limits! It hurts to laugh, but your muscular symmetry is elite.", adjust: { cash: -800, health: 18, looks: 12, stress: 10 } }
+    ],
+    over35: [
+      { text: "Submit to a complete clinical diagnostic exam focusing on the use of the [Noun].", log: "You ran clinical physical panels and updated the [Noun] metrics.", outcome: "The physician notes positive improvements and gives you a glowing longevity forecast.", adjust: { health: 15, smarts: 15, cash: -400, stress: -15 } },
+      { text: "Splurge on an expensive thermal muscle-recovery device paired with the [Noun].", log: "You bought advanced thermal muscle-recovery widgets for the [Noun].", outcome: "Absolute spa luxury! Your back tension is completely dissolved in heated massage loops.", adjust: { cash: -900, happiness: 25, health: 10, stress: -20 } }
+    ]
+  },
+  {
+    category: "Office & Corporate Hurdles",
+    nouns: ["important quarterly spreadsheet spreadsheet", "high-resolution conference webcam", "confidential annual evaluation draft", "shared lounge coffee machine", "secure company file database"],
+    under35: [
+      { text: "Work all weekend at your desk, polishing every detail on the [Noun].", log: "You worked intense overtime hours to submit the [Noun].", outcome: "The senior managers are absolutely stunned by your speed. A promotion whisper enters hallways.", adjust: { smarts: 20, stress: 25, health: -12, happiness: 10 } },
+      { text: "Delegate all stressful details of the [Noun] to an eager, unpaid young intern.", log: "You shifted tedious [Noun] details onto junior interns.", outcome: "You relax with golf tapes, but the intern accidentally copies a client logo crookedly, creating a minor splash.", adjust: { smarts: -10, karma: -20, stress: 15 } },
+      { text: "Ask your department supervisor for clear guidance regarding the [Noun].", log: "You sought direct management counseling on the [Noun].", outcome: "They praise your superb organizational communication and help you smooth out all snags.", adjust: { smarts: 15, stress: -10, happiness: 10 } }
+    ],
+    over35: [
+      { text: "Leverage your industry seniority to ask for a large pay bump linked to the [Noun].", log: "You demanded career salary bumps linked to the [Noun].", outcome: "VICTORY! They sign a $15,000 yearly increase to secure your rare, highly valuable experience.", adjust: { cash: 15000, looks: 10, stress: 15, happiness: 25 } },
+      { text: "Quietly crawl alternative recruiter board sites to replace your current [Noun] duties.", log: "You browsed remote executive listings to escape the [Noun].", outcome: "Multiple competitive firms reach out with delicious signing bonuses. Your market value is high.", adjust: { smarts: 15, happiness: 15, stress: 10 } }
+    ]
+  },
+  {
+    category: "Neighborhood Guilds",
+    nouns: ["strict neighborhood HOA manual", "unpaved sidewalk cement slab", "buzzing overhead streetlamp fuse", "misplaced parcel delivery carton", "wooden driveway boundary fence"],
+    under35: [
+      { text: "Host a delightful, friendly barbecue for the street centered around the [Noun].", log: "You hosted a friendly barbecue to resolve the [Noun] friction.", outcome: "Laughter is loud! Neighbors praise your wonderful character and agree to help with limits.", adjust: { happiness: 25, karma: 20, cash: -300, stress: -10 } },
+      { text: "Ignore all warning notifications and letters concerning the [Noun].", log: "You ignored local neighborhood warnings regarding the [Noun].", outcome: "The HOA issues a heavy $400 fine and your name is printed in absolute disgrace. Drama spikes.", adjust: { cash: -400, stress: 20, happiness: -15, karma: -15 } },
+      { text: "Draft a polite, highly constructive email to the district office about the [Noun].", log: "You wrote polite letters to district administrators on the [Noun].", outcome: "A maintenance van rolls up hours later, repairing everything with total precision.", adjust: { smarts: 12, karma: 15, stress: -10 } }
+    ],
+    over35: [
+      { text: "Campaign aggressively to win the local presidency over the [Noun] disputes.", log: "You ran for local presidency to control the [Noun].", outcome: "You won! You are now the neighborhood czar, enforcing strict lawn codes with deep authority.", adjust: { looks: 15, smarts: 15, stress: 25, happiness: 20 } },
+      { text: "Install heavy night-vision panoramic security cams to monitor the [Noun].", log: "You installed panoramic security cams to guard the [Noun].", outcome: "You feel fully secured, though delivery drivers avoid your porch, muttering about high paranoia.", adjust: { cash: -880, stress: -15, happiness: 12 } }
+    ]
+  },
+  {
+    category: "Marital Commitments",
+    nouns: ["gourmet candlelit restaurant reservation", "cozy matching flannel loungewear", "five-star thermal spa ticket", "authentic handwritten family recipe", "matching polished gold wedding band"],
+    under35: [
+      { text: "Exert absolute creative effort to craft a gorgeous homemade surprise using the [Noun].", log: "You designed elegant home surprises featuring the [Noun].", outcome: "Tears of joy well up in their eyes. Your romantic relationship bond is stronger than titanium steel.", adjust: { happiness: 35, looks: 15, karma: 18, stress: -15 } },
+      { text: "Grab some inexpensive, generic grocery flowers in place of the [Noun] last minute.", log: "You cheaped out on anniversary gifts in place of the [Noun].", outcome: "They accept them with a dry, disappointingly cold sigh. A shivering frost enters the bedroom.", adjust: { happiness: -15, looks: -10, stress: 15, cash: -30 } },
+      { text: "Schedule a refreshing, high-altitude weekend mountain camping trek with the [Noun].", log: "You arranged refreshing scenic hiking journeys near the [Noun].", outcome: "Sweating under the stars! You reconnect beautifully away from toxic office monitors.", adjust: { health: 15, happiness: 25, stress: -20, cash: -120 } }
+    ],
+    over35: [
+      { text: "Book an elite, private over-water beach villa including the premium [Noun] package.", log: "You booked elite private lagoon resorts featuring the [Noun].", outcome: "Absolute bucket-list heaven! You sip fresh coconut drinks on soft, warm sands, feeling wealthy.", adjust: { cash: -6000, happiness: 35, looks: 15, health: 10, stress: -25 } },
+      { text: "Organize a grand public vow renewal event featuring custom designs of the [Noun].", log: "You hosted a formal renewed marriage event highlighting the [Noun].", outcome: "An exquisite ceremony! Family and friends toast your enduring, premium-tier romance.", adjust: { cash: -4000, looks: 20, happiness: 30, stress: -15 } }
+    ]
+  },
+  {
+    category: "Automotive Maintenance",
+    nouns: ["worn engine transmission belt", "dented family car fender", "monthly expressway toll transponder", "cracked windshield glass pane", "monthly commuter train ticket"],
+    under35: [
+      { text: "Attempt to repair and mount the [Noun] yourself using online diagrams.", log: "You DIY-fixed vehicular damage to the [Noun].", outcome: "Grease is smeared on your cheeks, but the mechanical parts click cleanly! High accomplishment.", adjust: { smarts: 18, cash: -150, stress: 10 } },
+      { text: "Take the vehicle to an official authorized service depot to solve the [Noun].", log: "You utilized authorized mechanical repair depots for the [Noun].", outcome: "They charge a premium rate, but your vehicle is returned clean with perfect guarantees.", adjust: { cash: -950, stress: -20, happiness: 12 } },
+      { text: "Transition your commute to green passenger transit to bypass the [Noun] hassle.", log: "You shifted your daily transit to save stress on the [Noun].", outcome: "You walk more, increasing your lung health while getting plenty of cozy reading time in.", adjust: { health: 14, cash: 100, stress: -10, happiness: 15 } }
+    ],
+    over35: [
+      { text: "Trade in your buggy wagon for a premium luxury hybrid featuring a new [Noun].", log: "You bought a high-performance hybrid with premium [Noun] systems.", outcome: "Its leather smells delightful! You glide silently past heavy highways in utter, elite insulation.", adjust: { cash: -24000, looks: 20, happiness: 25, stress: -15 } },
+      { text: "Drive aggressively in fast expressway lanes, pushing the [Noun] to maximum limits.", log: "You pushed vehicular limits excessively past the [Noun].", outcome: "You save five minor minutes, but a heavy speed camera snaps your plate, sending a $350 fine.", adjust: { health: -10, stress: 25, cash: -350, karma: -15 } }
+    ]
+  },
+  {
+    category: "Creative Pursuits",
+    nouns: ["vintage mechanical film camera", "handmade wooden acoustic guitar", "battered carbon fiber trail pole", "local league chess timer", "ultra-wide virtual reality headset"],
+    under35: [
+      { text: "Invest hundreds of hours practicing advanced techniques using the [Noun].", log: "You practiced creative methods using the [Noun] regularly.", outcome: "Your artistic output is legendary! Critics and friends are deeply moved by your creations.", adjust: { happiness: 25, smarts: 18, looks: 12, stress: -5 } },
+      { text: "Stream your experimental performances featuring the [Noun] to worldwide online forums.", log: "You streamed creative performances highlighting the [Noun].", outcome: "Your clips go completely viral, earning hundreds of positive comments from worldwide fans.", adjust: { looks: 15, happiness: 25, stress: 12 } },
+      { text: "Join a dedicated local amateur creators guild centered around the [Noun].", log: "You joined a local creators guild centered on the [Noun].", outcome: "You make amazing, loyal artistic friends, sharing hot cocoa and creative inspiration on cold nights.", adjust: { happiness: 20, karma: 15, stress: -15 } }
+    ],
+    over35: [
+      { text: "Construct an exquisite custom soundproof studio in your house for the [Noun].", log: "You built a professional in-house studio for the [Noun].", outcome: "Your private creative retreat! It looks spectacular, shielding you from domestic worries.", adjust: { cash: -12000, happiness: 30, stress: -20 } },
+      { text: "Acquire the absolute finest premium accessories available for the [Noun].", log: "You acquired finest professional accessories for the [Noun].", outcome: "Incredible quality! The premium craftsmanship elevates your hobby output into absolute fine art.", adjust: { cash: -4500, looks: 15, happiness: 25 } }
+    ]
+  },
+  {
+    category: "Tax & Wealth Defense",
+    nouns: ["tedious annual tax assessment", "certified notary contract seal", "unpaid municipal traffic summons", "parental legacy legal folder", "premium family medical policy"],
+    under35: [
+      { text: "File all required documents related to the [Noun] meticulously before the deadline.", log: "You meticulously processed official papers for the [Noun].", outcome: "Clean, perfect compliance! You sleep like a happy, tax-compliant citizen with zero penalties.", adjust: { smarts: 15, stress: -15, karma: 15 } },
+      { text: "Ignore the complicated notifications about the [Noun], hoping they fade away.", log: "You ignored legal notices concerning the [Noun].", outcome: "A heavy, freezing default judgement letter arrives from court. Your credit rating is badly bruised.", adjust: { cash: -1500, karma: -20, stress: 30, happiness: -20 } },
+      { text: "Request a free public consultative advisor session on the [Noun].", log: "You consulted public advisory departments regarding the [Noun].", outcome: "You find a rare, little-known clause that legalizes a nice credit. Perfect financial strategy.", adjust: { smarts: 18, cash: 350, stress: -10, happiness: 10 } }
+    ],
+    over35: [
+      { text: "Hire an elite corporate wealth specialist to fully shield your [Noun] interests.", log: "You retained elite wealth counsel for the [Noun] shielding.", outcome: "They structure dynamic private shields that maximize returns securely. Exceptional long-term planning.", adjust: { cash: -2500, smarts: 20, stress: -20, happiness: 15 } },
+      { text: "Submit questionable expense write-offs under the [Noun] to cheat state tax codes.", log: "You attempted illegal write-off strategies linked to the [Noun].", outcome: "The audit team catches your sketchy logs instantly. You are hit with severe fines and penalties.", adjust: { cash: -4800, karma: -35, stress: 35, happiness: -25 } }
+    ]
+  }
 ];
 
-const generateMidLifePool = (): MidScenarioDef[] => {
-  const resultList = [...CAREER_GATED_EVENTS];
-  let count = resultList.length;
-  let topicIdx = 0;
+const MID_SITUATIONS = [
+  { desc: "Your daily routine is interrupted by a high-stakes suburban drama involving your [Noun].", titlePrefix: "Crisis of the" },
+  { desc: "A highly stressful situation regarding safety and compliance arises from your [Noun].", titlePrefix: "Regulatory Issue with the" },
+  { desc: "An unexpected family meeting centers around how your household manages the [Noun].", titlePrefix: "Household Dispute over" },
+  { desc: "A sudden late-night emergency prompts you to verify the integrity of the [Noun].", titlePrefix: "Midnight Panic over the" },
+  { desc: "Your spouse or long-term partner is extremely frustrated about the status of the [Noun].", titlePrefix: "Marital Struggle with the" },
+  { desc: "An opportunistic salesperson offers you a suspicious upgrade related to your [Noun].", titlePrefix: "Upgrade Pitch for the" },
+  { desc: "A wealthy executive relative queries you about your future plans with the [Noun].", titlePrefix: "Legacy Query over the" },
+  { desc: "Your neighbor initiates a tense neighborhood discussion and points accusingly at your [Noun].", titlePrefix: "Neighbor Stand-off over" },
+  { desc: "You receive a strange, certified envelope regarding your ownership of the [Noun].", titlePrefix: "Official Notice about" },
+  { desc: "A dynamic health and longevity advisor warns you that your stress is heavily impacted by the [Noun].", titlePrefix: "Health Warning about the" }
+];
 
-  while (count < 150) {
-    const topic = MID_GENERAL_TOPICS[topicIdx % MID_GENERAL_TOPICS.length];
-    const eventIdNum = count + 1;
-    const isOdd = count % 2 !== 0;
-
-    const title = `Adulthood: ${topic.theme} 🏡 (#${eventIdNum})`;
-    const description = `With your mid-life years progressing, you struggle with stability and security. You face a hard scenario regarding your ${topic.theme.toLowerCase()}. Real adults make real trade-offs.`;
-
-    const choice1Text = topic.good.charAt(0).toUpperCase() + topic.good.slice(1) + '.';
-    const choice1Outcome = `You handled your ${topic.theme.toLowerCase()} with incredible skill and patience. You feel completely secure and grounded.`;
-    const adj1 = isOdd
-      ? { happiness: 15, smarts: 15, stress: -10, karma: 10, cash: -200 }
-      : { happiness: 12, health: 10, smarts: 10, stress: -15, karma: 15 };
-
-    const choice2Text = topic.bad.charAt(0).toUpperCase() + topic.bad.slice(1) + '!';
-    const choice2Outcome = `You decided to: ${topic.bad}! The immediate adrenaline rush was hilarious, but your life is now highly stressed and complicated.`;
-    const adj2 = {
-      happiness: 25,
-      health: -15,
-      smarts: -10,
-      looks: -5,
-      stress: 25,
-      karma: -25,
-      cash: isOdd ? -800 : 0
+interface GeneratedMidScenarioDef {
+  id: string;
+  title: string;
+  description: string;
+  minAge: number;
+  maxAge: number;
+  choices: {
+    text: string;
+    outcomeText: string;
+    adjustments: {
+      happiness?: number;
+      health?: number;
+      smarts?: number;
+      looks?: number;
+      stress?: number;
+      karma?: number;
+      cash?: number;
     };
+    logText: string;
+  }[];
+}
 
-    resultList.push({
-      id: `mid_gen_${count}`,
-      title,
-      description,
-      choices: [
-        {
-          text: choice1Text,
-          outcomeText: choice1Outcome,
-          adjustments: adj1,
-          logText: `You resolved your ${topic.theme.toLowerCase()} with an elegant option.`
-        },
-        {
-          text: choice2Text,
-          outcomeText: choice2Outcome,
-          adjustments: adj2,
-          logText: `You triggered high volatility over your ${topic.theme.toLowerCase()}.`
+const generateAllMidScenarios = (): GeneratedMidScenarioDef[] => {
+  const result: GeneratedMidScenarioDef[] = [];
+  let generatedCount = 0;
+
+  // 10 themes * 5 nouns * 10 situations = 500 unique permutations!
+  for (let t = 0; t < MID_THEMES.length; t++) {
+    const theme = MID_THEMES[t];
+    for (let n = 0; n < theme.nouns.length; n++) {
+      const noun = theme.nouns[n];
+      for (let s = 0; s < MID_SITUATIONS.length; s++) {
+        const sit = MID_SITUATIONS[s];
+
+        const scenarioId = `mid_gen_${t}_n${n}_s${s}`;
+        const uppercaseNoun = noun.charAt(0).toUpperCase() + noun.slice(1);
+        const title = `${sit.titlePrefix} ${uppercaseNoun} 🏡`;
+        const description = `${sit.desc.replace(/\[Noun\]/g, noun)} Real adulthood is defined by your choices under severe stress.`;
+
+        // Age division: even generated indices get ages 26-34, odd get ages 35-45
+        const isUnder35 = (generatedCount % 2 === 0);
+        const minAge = isUnder35 ? 26 : 35;
+        const maxAge = isUnder35 ? 34 : 45;
+
+        // Build choices based on age range mapping
+        const choices = theme.under35.map(u => ({
+          text: u.text.replace(/\[Noun\]/g, noun),
+          outcomeText: u.outcome.replace(/\[Noun\]/g, noun),
+          adjustments: u.adjust,
+          logText: u.log.replace(/\[Noun\]/g, noun)
+        }));
+
+        // Add 35+ choices if appropriate
+        if (!isUnder35) {
+          theme.over35.forEach(o => {
+            choices.push({
+              text: o.text.replace(/\[Noun\]/g, noun),
+              outcomeText: o.outcome.replace(/\[Noun\]/g, noun),
+              adjustments: o.adjust,
+              logText: o.log.replace(/\[Noun\]/g, noun)
+            });
+          });
         }
-      ]
-    });
 
-    count++;
-    topicIdx++;
+        result.push({
+          id: scenarioId,
+          title,
+          description,
+          minAge,
+          maxAge,
+          choices
+        });
+
+        generatedCount++;
+      }
+    }
   }
 
-  return resultList;
+  return result;
 };
 
-const rawMidEvents = generateMidLifePool();
-
-export const adulthoodMidEvents: GameEvent[] = rawMidEvents.map((evt) => {
+const rawGatedEvents: GameEvent[] = CAREER_GATED_EVENTS.map(evt => {
   return {
     id: evt.id,
     title: evt.title,
@@ -916,27 +1069,54 @@ export const adulthoodMidEvents: GameEvent[] = rawMidEvents.map((evt) => {
       const age = state.characterInfo?.age;
       const isRightAge = age >= 26 && age <= 45;
       if (!isRightAge) return false;
-
-      // Double check career matching predicates
       if (evt.conditionChecker) {
         return evt.conditionChecker(state);
       }
       return true;
     },
-    choices: evt.choices.map((c) => {
-      return {
-        choiceText: c.text,
-        outcomeText: c.outcomeText,
-        effect: (state: CharacterState) => {
-          adjustStats(state, c.adjustments);
-
-          if (c.adjustments.cash) {
-            state.finances.cashBalance = Math.max(state.finances.cashBalance + c.adjustments.cash, -250000);
-          }
-
-          state.log.push(`Age ${state.characterInfo.age}: ${c.logText}`);
+    choices: evt.choices.map(c => ({
+      choiceText: c.text,
+      outcomeText: c.outcomeText,
+      effect: (state: CharacterState) => {
+        adjustStats(state, c.adjustments);
+        if (c.adjustments.cash) {
+          state.finances.cashBalance = Math.max(state.finances.cashBalance + c.adjustments.cash, -500000);
         }
-      };
-    })
+        state.log.push(`Age ${state.characterInfo.age}: ${c.logText}`);
+      }
+    }))
   };
 });
+
+const generatedScenarios = generateAllMidScenarios();
+
+const rawGeneratedEvents: GameEvent[] = generatedScenarios.map(evt => {
+  return {
+    id: evt.id,
+    title: evt.title,
+    description: evt.description,
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      if (age === undefined) return false;
+      return age >= evt.minAge && age <= evt.maxAge;
+    },
+    choices: evt.choices.map(c => ({
+      choiceText: c.text,
+      outcomeText: c.outcomeText,
+      effect: (state: CharacterState) => {
+        adjustStats(state, c.adjustments);
+        if (c.adjustments.cash) {
+          state.finances.cashBalance = Math.max(state.finances.cashBalance + c.adjustments.cash, -500000);
+        }
+        state.log.push(`Age ${state.characterInfo.age}: ${c.logText}`);
+      }
+    }))
+  };
+});
+
+export const adulthoodMidEvents: GameEvent[] = [
+  ...rawGatedEvents,
+  ...rawGeneratedEvents
+];
+
