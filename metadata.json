@@ -1,0 +1,6 @@
+{
+  "name": "BitLife Replica",
+  "description": "A completely client-side, deterministic, rule-based replica of the popular text-based life simulator BitLife, driven by Zustand, React, and Tailwind CSS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
