@@ -3,7 +3,13 @@ import { EVENT_REGISTRY as originalEvents } from '../../eventRegistry';
 import { childhoodEvents } from './childhood';
 import { adolescenceEvents } from './adolescence';
 import { adulthoodYoungEvents } from './adulthood_young';
+import { youngDataPack1AEvents } from './adulthood_young_datapack1_a';
+import { youngDataPack1BEvents } from './adulthood_young_datapack1_b';
+import { youngDataPack1CEvents } from './adulthood_young_datapack1_c';
 import { adulthoodMidEvents } from './adulthood_mid';
+import { youngDataPack2AEvents } from './adulthood_mid_datapack2_a';
+import { youngDataPack2BEvents } from './adulthood_mid_datapack2_b';
+import { youngDataPack2CEvents } from './adulthood_mid_datapack2_c';
 import { adulthoodMatureEvents } from './adulthood_mature';
 import { seniorLifeEvents } from './seniorLife';
 import { adjustStats } from '../../utils';
@@ -13,7 +19,13 @@ const rawMasterEventRegistry: GameEvent[] = [
   ...childhoodEvents,
   ...adolescenceEvents,
   ...adulthoodYoungEvents,
+  ...youngDataPack1AEvents,
+  ...youngDataPack1BEvents,
+  ...youngDataPack1CEvents,
   ...adulthoodMidEvents,
+  ...youngDataPack2AEvents,
+  ...youngDataPack2BEvents,
+  ...youngDataPack2CEvents,
   ...adulthoodMatureEvents,
   ...seniorLifeEvents
 ];

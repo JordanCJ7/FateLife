@@ -158,6 +158,27 @@ function saveHighScore(score: HighScore) {
   }
 }
 
+function validateEventChoices(evt: GameEvent): GameEvent {
+  let choices = [...evt.choices];
+  if (choices.length > 4) {
+    choices = choices.slice(0, 4);
+  }
+  while (choices.length < 3) {
+    choices.push({
+      choiceText: "Take a moment to collect your thoughts and move forward.",
+      outcomeText: "You take a deep breath, ground yourself, and step into the next chapter of your life.",
+      effect: (state: CharacterState) => {
+        adjustStats(state, { happiness: 5, stress: -5 });
+        state.log.push(`Age ${state.characterInfo?.age || ''}: You paused briefly to reflect and collect your thoughts.`);
+      }
+    });
+  }
+  return {
+    ...evt,
+    choices
+  };
+}
+
 function formatEventWithRelationships(evt: GameEvent, relationships: NPC[], age: number): GameEvent {
   const parent = relationships.find(r => r.relationshipType === 'Parent' && !r.isDead);
   const sibling = relationships.find(r => r.relationshipType === 'Sibling' && !r.isDead);
@@ -196,7 +217,7 @@ function formatEventWithRelationships(evt: GameEvent, relationships: NPC[], age:
   const enhancedChoices = [...initialChoices];
 
   if (age >= 16) {
-    const targetLength = Math.max(enhancedChoices.length, Math.floor(Math.random() * 3) + 4); // target length between 4 and 6
+    const targetLength = Math.min(4, Math.max(enhancedChoices.length, Math.floor(Math.random() * 2) + 3)); // exactly 3 or 4
     if (enhancedChoices.length < targetLength) {
       // Determine category
       const txt = (evt.title + ' ' + evt.description + ' ' + (evt.id || '')).toLowerCase();
@@ -347,11 +368,11 @@ function formatEventWithRelationships(evt: GameEvent, relationships: NPC[], age:
     }
   }
 
-  return {
+  return validateEventChoices({
     ...evt,
     description: replacePlaceholders(evt.description),
     choices: enhancedChoices
-  };
+  });
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -1284,6 +1305,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const workplaceEventsPool = eligibleEvents.filter(e => parseCategory(e) === 'Workplace');
     const personalEventsPool = eligibleEvents.filter(e => parseCategory(e) === 'PersonalLife');
     const randomEventsPool = eligibleEvents.filter(e => parseCategory(e) === 'Random');
+    const childhoodEventsPool = eligibleEvents.filter(e => e.category === 'Childhood');
 
     const queuedEvents: GameEvent[] = [];
     const queueAndMarkSeen = (evt: GameEvent) => {
@@ -1343,90 +1365,138 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       };
     };
 
-    if (nextAge <= 5) {
-      // Ages 1-5: Exactly 2 childhood scenarios
-      const rawChildhood = eligibleEvents.filter(e => e.category === 'Childhood');
-      const shuffledChild = shuffleArray(rawChildhood);
-      if (shuffledChild.length >= 2) {
-        queueAndMarkSeen(shuffledChild[0]);
-        queueAndMarkSeen(shuffledChild[1]);
-      } else if (shuffledChild.length === 1) {
-        queueAndMarkSeen(shuffledChild[0]);
-        queueAndMarkSeen(makeToddlerEvent(nextAge, 'Curiosity'));
-      } else {
-        queueAndMarkSeen(makeToddlerEvent(nextAge, 'Sensory'));
-        queueAndMarkSeen(makeToddlerEvent(nextAge, 'Instinct'));
-      }
+    // Helper to generate simple fallback event for teens/adults if we run short on pool
+    const makeFallbackEvent = (age: number): GameEvent => {
+      const adjective = ['unexpected', 'interesting', 'routine', 'surprising', 'casual'][Math.floor(Math.random() * 5)];
+      const focus = ['perspective', 'routine', 'environment', 'interaction', 'growth'][Math.floor(Math.random() * 5)];
+      return {
+        id: `gen_fallback_${age}_${Math.random()}`,
+        title: `Life Reflection: Day by Day 🌅`,
+        description: `At age ${age}, you encounter an ${adjective} turn of events that causes you to reflect on your daily ${focus}.`,
+        category: age < 18 ? 'School' : 'Adulthood',
+        condition: () => true,
+        choices: [
+          {
+            choiceText: "Take a moment to collect your thoughts and move forward.",
+            outcomeText: "You take a deep breath, ground yourself, and step into the next chapter of your life.",
+            effect: (state) => {
+              adjustStats(state, { happiness: 10, stress: -10 });
+              state.log.push(`Age ${state.characterInfo.age}: You paused to gather your mental focus.`);
+            }
+          },
+          {
+            choiceText: "Invest extra energy into busy physical and social activities.",
+            outcomeText: "You spend your days staying highly active, leaving little room for worry or regret.",
+            effect: (state) => {
+              adjustStats(state, { health: 10, looks: 5, happiness: 5 });
+              state.log.push(`Age ${state.characterInfo.age}: You kept exceptionally active to boost your lifestyle.`);
+            }
+          },
+          {
+            choiceText: "Focus deeply on quiet readings and self-improvement books.",
+            outcomeText: "You spend silent evenings exploring literature, sharpening your mind.",
+            effect: (state) => {
+              adjustStats(state, { smarts: 15, stress: 5 });
+              state.log.push(`Age ${state.characterInfo.age}: You spent extra time focused on academic and intellectual growth.`);
+            }
+          }
+        ]
+      };
+    };
+
+    let targetCount = 1;
+    if (nextAge < 16) {
+      targetCount = Math.floor(Math.random() * 2) + 1; // 1 to 2
     } else {
-      // Ages 6+: Process a selective, diverse stream of 2 to 6 unique scenarios
-      // Personal Life (1-2 events)
-      const numPersonal = Math.floor(Math.random() * 2) + 1; // 1 or 2
-      for (let i = 0; i < numPersonal; i++) {
-        const pool = personalEventsPool.filter(e => !e.id || !seenEventIds.includes(e.id));
-        if (pool.length > 0) {
-          queueAndMarkSeen(shuffleArray(pool)[0]);
+      targetCount = Math.floor(Math.random() * 3) + 4; // 4 to 6
+    }
+
+    const currentTurnIds = new Set<string>();
+
+    const tryAddFromPool = (pool: GameEvent[]) => {
+      for (const evt of pool) {
+        if (queuedEvents.length >= targetCount) break;
+        if (evt.id && (seenEventIds.includes(evt.id) || currentTurnIds.has(evt.id))) continue;
+        queueAndMarkSeen(evt);
+        if (evt.id) currentTurnIds.add(evt.id);
+        break; // Only pick one per category round to keep variety high
+      }
+    };
+
+    if (nextAge <= 5) {
+      // Toddler stage loop
+      let poolChildhood = shuffleArray(childhoodEventsPool);
+      while (queuedEvents.length < targetCount) {
+        const remainingChildhood = poolChildhood.filter(e => !e.id || (!seenEventIds.includes(e.id) && !currentTurnIds.has(e.id)));
+        if (remainingChildhood.length > 0) {
+          const evt = remainingChildhood[0];
+          queueAndMarkSeen(evt);
+          if (evt.id) currentTurnIds.add(evt.id);
+        } else {
+          const fallback = makeToddlerEvent(nextAge, queuedEvents.length === 0 ? 'Sensory' : 'Curiosity');
+          queueAndMarkSeen(fallback);
+          if (fallback.id) currentTurnIds.add(fallback.id);
         }
       }
+    } else {
+      // Refined round-robin picking to ensure highly diverse category mix
+      let poolSchool = shuffleArray(schoolEventsPool);
+      let poolWorkplace = shuffleArray(workplaceEventsPool);
+      let poolPersonal = shuffleArray(personalEventsPool);
+      let poolRandom = shuffleArray(randomEventsPool);
 
-      // Academic Loop (If enrolled, 1 event)
+      // 1. Personal Round
+      tryAddFromPool(poolPersonal);
+
+      // 2. School Round if enrolled
       const enrolledStages = ['Primary School', 'Middle School', 'High School', 'University', 'Graduate School'];
       const enrolled = nextEducation && enrolledStages.includes(nextEducation.currentStage);
       if (enrolled) {
-        const pool = schoolEventsPool.filter(e => !e.id || !seenEventIds.includes(e.id));
-        if (pool.length > 0) {
-          queueAndMarkSeen(shuffleArray(pool)[0]);
-        }
+        tryAddFromPool(poolSchool);
       }
 
-      // Workplace Loop (If employed, 1 event)
+      // 3. Workplace Round if employed
       const occupation = nextInfo.currentOccupation;
       const employed = occupation && !['None', 'Retired', 'Primary School Student', 'Middle School Student', 'High School Student', 'University Student', 'Graduate Student'].includes(occupation);
       if (employed) {
-        const pool = workplaceEventsPool.filter(e => !e.id || !seenEventIds.includes(e.id));
-        if (pool.length > 0) {
-          queueAndMarkSeen(shuffleArray(pool)[0]);
-        }
+        tryAddFromPool(poolWorkplace);
       }
 
-      // Random Encounters (1-2 events)
-      const numRandom = Math.floor(Math.random() * 2) + 1; // 1 or 2
-      for (let i = 0; i < numRandom; i++) {
-        const pool = randomEventsPool.filter(e => !e.id || !seenEventIds.includes(e.id));
-        if (pool.length > 0) {
-          queueAndMarkSeen(shuffleArray(pool)[0]);
-        }
+      // 4. Random Round
+      tryAddFromPool(poolRandom);
+
+      // 5. Backfill from remaining general pool of any category to meet the target count exactly (like 4-6 cards for 16+)
+      let allRemaining = eligibleEvents.filter(evt => !evt.id || (!seenEventIds.includes(evt.id) && !currentTurnIds.has(evt.id)));
+      allRemaining = shuffleArray(allRemaining);
+
+      for (const evt of allRemaining) {
+        if (queuedEvents.length >= targetCount) break;
+        queueAndMarkSeen(evt);
+        if (evt.id) currentTurnIds.add(evt.id);
       }
 
-      // Maintain dynamic range [2, 6]
-      while (queuedEvents.length < 2) {
-        const remaining = eligibleEvents.filter(e => !e.id || !seenEventIds.includes(e.id));
-        if (remaining.length > 0) {
-          queueAndMarkSeen(shuffleArray(remaining)[0]);
-        } else {
-          break;
-        }
-      }
-
-      // Enforce absolute maximum of 6 events
-      if (queuedEvents.length > 6) {
-        queuedEvents.length = 6;
-        // Keep seenEventIds in sync with truncated queue
-        seenEventIds.length = 0;
-        seenEventIds.push(...(get().seenEventIds || []));
-        queuedEvents.forEach(evt => {
-          if (evt.id && !seenEventIds.includes(evt.id)) {
-            seenEventIds.push(evt.id);
-          }
-        });
+      // 6. If we still don't have enough events due to high registry fatigue, generate fallback cards
+      while (queuedEvents.length < targetCount) {
+        const fallback = makeFallbackEvent(nextAge);
+        queueAndMarkSeen(fallback);
+        if (fallback.id) currentTurnIds.add(fallback.id);
       }
     }
 
-    // Format all queued events with NPCs
-    let finalQueued = queuedEvents.map(evt => formatEventWithRelationships(evt, nextRelationships, nextAge));
+    // Force strict length boundary on queued events to exactly targetCount
+    if (queuedEvents.length > targetCount) {
+      queuedEvents.length = targetCount;
+    }
+
+    // Format all queued events with NPCs and ensure 3-4 choices are strictly validated
+    let finalQueued = queuedEvents.map(evt => {
+      const formatted = formatEventWithRelationships(evt, nextRelationships, nextAge);
+      return validateEventChoices(formatted);
+    });
 
     if (childhoodInterventionEvent) {
       const formattedChildhood = formatEventWithRelationships(childhoodInterventionEvent, nextRelationships, nextAge);
-      finalQueued.unshift(formattedChildhood);
+      finalQueued.unshift(validateEventChoices(formattedChildhood));
     }
 
     // Overriding / Prepending addiction craves scenario (40% probability)
@@ -1475,7 +1545,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           }
         ]
       };
-      finalQueued.unshift(addictionEvent);
+      finalQueued.unshift(validateEventChoices(addictionEvent));
     }
 
     let current = null;

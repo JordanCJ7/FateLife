@@ -15,6 +15,16 @@ export default function EventModal() {
 
   if (!currentEvent || !characterInfo) return null;
 
+  const cleanChoiceText = (text: string): string => {
+    if (text.includes(':')) {
+      // Split at the first colon, grab everything after it, and trim spaces
+      const rawAction = text.split(':').slice(1).join(':').trim();
+      // Capitalize the first letter of the actual action string
+      return rawAction.charAt(0).toUpperCase() + rawAction.slice(1);
+    }
+    return text;
+  };
+
   return (
     <div id="event_modal_overlay" className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-6 relative overflow-hidden animate-scale-up">
@@ -55,7 +65,7 @@ export default function EventModal() {
               className="group w-full text-left bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 p-4 rounded-2xl transition duration-200 flex justify-between items-center gap-4 cursor-pointer outline-none focus:ring-2 focus:ring-teal-500"
             >
               <span className="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-white transition">
-                {choice.choiceText}
+                {cleanChoiceText(choice.choiceText)}
               </span>
               <ArrowRightCircle className="w-5 h-5 text-slate-600 group-hover:text-teal-400 group-hover:translate-x-1.5 transition-all duration-300 flex-shrink-0" />
             </button>

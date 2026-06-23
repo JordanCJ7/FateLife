@@ -1,398 +1,1146 @@
 import { GameEvent, CharacterState } from '../../types';
 import { adjustStats } from '../../utils';
 
-interface MatureScenarioDef {
-  id: string;
-  title: string;
-  description: string;
-  conditionChecker?: (state: CharacterState) => boolean;
-  choices: {
-    text: string;
-    outcomeText: string;
-    adjustments: {
-      happiness?: number;
-      health?: number;
-      smarts?: number;
-      looks?: number;
-      stress?: number;
-      karma?: number;
-      cash?: number;
-    };
-    logText: string;
-  }[];
-}
-
-// 1. Mature Gated Career Scenarios (Gated Events)
-const MATURE_GATED_EVENTS: MatureScenarioDef[] = [
-  {
-    id: 'mat_corp_01',
-    title: 'Workplace: CEO Retirement Succession Plan 👔',
-    description: 'The board demands you select a successor. A brilliant, humble junior vs. your golf buddy who represents deep investor portfolios.',
-    conditionChecker: (state) => state.characterInfo?.currentOccupation === 'CEO of Tech Startup',
-    choices: [
-      {
-        text: 'Select the humble, highly competent junior scientist.',
-        outcomeText: 'The market applauds your superb meritocratic standards! The junior excels and remains deeply loyal to you.',
-        adjustments: { happiness: 20, smarts: 15, karma: 25, stress: -10 },
-        logText: 'You chose a brilliant junior engineer to succeed your CEO legacy.'
-      },
-      {
-        text: 'Select your golf buddy to secure post-retirement boardroom deals.',
-        outcomeText: 'You secure a $50,000 retirement bonus, but junior directors quit in protest, hurting your moral compass.',
-        adjustments: { happiness: 10, cash: 50000, karma: -30, stress: 20 },
-        logText: 'You appointed a well-connected golf buddy as CEO successor for private boardroom ties.'
-      }
-    ]
-  },
-  {
-    id: 'mat_corp_02',
-    title: 'Workplace: Landmark Lawsuit Defense ⚖️',
-    description: 'A multi-state intellectual property lawsuit goes to final arguments. Your defense will define your corporate legal legacy.',
-    conditionChecker: (state) => state.characterInfo?.currentOccupation === 'Corporate Attorney',
-    choices: [
-      {
-        text: 'Spend 80 hours rewriting legal trial motions.',
-        outcomeText: 'VICTORY! Your name is etched as a legal genius, but you suffer physical exhaustion and chest pains.',
-        adjustments: { happiness: 30, smarts: 20, health: -15, stress: 30 },
-        logText: 'You won a historic, landmark intellectual property trial through brutal overwork.'
-      },
-      {
-        text: 'Delegate the courtroom speech to your associate.',
-        outcomeText: 'You lose the case. Your firm takes a bruising, but you enjoyed reading books on the beach.',
-        adjustments: { happiness: 5, health: 15, looks: 5, stress: -20 },
-        logText: 'You delegated critical litigation arguments to junior associates.'
-      }
-    ]
-  },
-  {
-    id: 'mat_med_01',
-    title: 'Workplace: Medical Board Presidency 🎗️',
-    description: 'You are nominated for President of the State Cosmetic Board. It requires extensive regulatory speaking.',
-    conditionChecker: (state) => state.characterInfo?.currentOccupation === 'Plastic Surgeon',
-    choices: [
-      {
-        text: 'Accept the nomination. Time to lead!',
-        outcomeText: 'You won! You shape statewide surgery safety codes, earning stellar prestige.',
-        adjustments: { happiness: 25, smarts: 20, stress: 25, karma: 20 },
-        logText: 'You were elected President of the State Medical and Cosmetic Board.'
-      },
-      {
-        text: 'Decline. You want to spend time at your ranch.',
-        outcomeText: 'You enjoy peaceful horse feeding and simple mountain cabin stays.',
-        adjustments: { happiness: 15, health: 15, stress: -20 },
-        logText: 'You declined high-prestige medical board positions for personal country stays.'
-      }
-    ]
-  },
-  {
-    id: 'mat_lab_01',
-    title: 'Workplace: Master Plumber Trade Transition 🛠️',
-    description: 'An physical back ache makes pipe hauling painful. You have the opportunity to buy out the local repair shop ($20,000) and hire juniors.',
-    conditionChecker: (state) => state.characterInfo?.currentOccupation === 'Apprentice Plumber',
-    choices: [
-      {
-        text: 'Pay $20,000 cash to transition into the shop owner.',
-        outcomeText: 'You are now the boss! Juniors crawl into wet crawlspaces while you manage spreadsheets in your comfy leather chair.',
-        adjustments: { happiness: 30, health: 15, stress: -15, cash: -20000 },
-        logText: 'You bought out the plumbing repair shop, transitioning from worker to executive.'
-      },
-      {
-        text: 'Ignore it and keep carrying cast-iron sewers.',
-        outcomeText: 'Your bank balance stays high, but your lumbar discs scream in physical agony.',
-        adjustments: { happiness: -15, health: -20, stress: 20 },
-        logText: 'You chose physical labor exhaustion over trade management transfers.'
-      }
-    ]
-  }
-];
-
-// Matrix templates for Mature Adulthood (Ages 45-64)
-const MATURE_THEMES = [
-  {
-    category: "Retirement Portfolio & Legacy",
-    nouns: ["private family trust deed", "precious gold bullion chest", "index-linked life annuity", "valuable vintage wine cellar", "diversified dividend-producing REIT"],
-    under55: [
-      { text: "Allocate a solid, conservative fraction of your wealth to acquire a [Noun].", log: "You conservative-hedged your wealth into a [Noun].", outcome: "Your overall treasury profile rises! You sleep in excellent long-term security.", adjust: { smarts: 15, cash: -1200, stress: -15, happiness: 10 } },
-      { text: "Speculate aggressively, staking high values of cash on late-cycle trends in the [Noun].", log: "You speculatively leveraged funds near the [Noun].", outcome: "Severe market turbulence! Your advisors issue tense reports, though your pulse races with exciting adrenaline.", adjust: { cash: -5000, stress: 25, happiness: 15, looks: -5 } },
-      { text: "Hire a long-time golf buddy to manage all legal folders regarding the [Noun].", log: "You hired a friendly acquaintance to oversee the [Noun].", outcome: "They overlook three minor clauses, forcing you to pay $2,000 in regulatory penalty stamps.", adjust: { cash: -2000, smarts: -5, stress: 15, karma: -10 } }
-    ],
-    over55: [
-      { text: "Formally liquidate the [Noun], distributing early trust legacies to your children.", log: "You liquidated and shared the [Noun] with descendants.", outcome: "They wept in profound gratitude! Your family relationships are incredibly close, securing your historic name.", adjust: { karma: 30, happiness: 35, stress: -15 } },
-      { text: "Encase the [Noun] in high-security offshore legal shells to minimize taxes.", log: "You legally shielded the [Noun] in offshore shells.", outcome: "An elite administrative structure holds your wealth safely. The tax auditors sigh in defeat.", adjust: { smarts: 20, cash: -4000, happiness: 15, stress: -10 } }
-    ]
-  },
-  {
-    category: "Empty Nest & Family Reunions",
-    nouns: ["family dining oak table", "wedding rehearsal speech draft", "first grandchild's nursery cradle", "family genealogy photo album", "rustic lake house lease"],
-    under55: [
-      { text: "Fund a luxurious, fully-catered scenic mountain reunion near the [Noun].", log: "You sponsored a magnificent holiday around the [Noun].", outcome: "Wonderful bonding! The children Toast your generous, mature, and supportive parenting style.", adjust: { cash: -2500, happiness: 30, stress: -15, karma: 15 } },
-      { text: "Politely demand that everyone pay their own fair share for events near the [Noun].", log: "You enforced financial independence on children near the [Noun].", outcome: "They mutter about your rigid check-books, though it successfully fosters adult self-reliance.", adjust: { smarts: 10, stress: 5, happiness: -5 } },
-      { text: "Convert the empty bedrooms near the [Noun] into a massive custom recreation space.", log: "You redecorated empty domestic space around the [Noun].", outcome: "Highly quiet and comfortable! Your home office is a pure, silent sanctuary.", adjust: { cash: -800, happiness: 20, stress: -20 } }
-    ],
-    over55: [
-      { text: "Dedicate massive personal hours caring and babysitting near the [Noun].", log: "You dedicated long hours supporting family around the [Noun].", outcome: "The toddler sleeps happily in your arms! You feel your legacy warming your soul.", adjust: { health: -10, happiness: 35, karma: 25, stress: 15 } },
-      { text: "Send premium-quality toys and supplies for the [Noun] while reclaiming your retired silence.", log: "You balance-funded household needs for the [Noun] from a distance.", outcome: "They praise your superb, supportive generosity while you relax peacefully with reading books.", adjust: { cash: -1200, happiness: 20, stress: -20, karma: 15 } }
-    ]
-  },
-  {
-    category: "Anti-Aging & Cardiac Defense",
-    nouns: ["daily blood pressure cuff", "advanced orthopedic sleep mattress", "prescription cholesterol bottle", "low-impact stationary exercise bike", "organic herbal green tea jar"],
-    under55: [
-      { text: "Observe a strict, zero-sodium plant menu while training with the [Noun].", log: "You maintained rigorous physiological health around the [Noun].", outcome: "Incredible vitals! Your resting pulse rate falls to elite athletic zones.", adjust: { health: 25, looks: 12, stress: -10, happiness: 15 } },
-      { text: "Inhale unapproved anti-aging supplements paired with the [Noun] metrics.", log: "You consumed experimental cellular products for the [Noun].", outcome: "A strange rash breaks out on your throat, causing you to scratch furiously during meetings.", adjust: { health: -15, looks: -10, stress: 15 } },
-      { text: "Work intense 80-hour executive weeks, tossing the [Noun] warnings aside.", log: "You ignored warnings of physiological fatigue around the [Noun].", outcome: "A sudden chest discomfort triggers an expensive ambulance route. A grave warning of mortality.", adjust: { health: -30, cash: -3000, stress: 35, happiness: -20 } }
-    ],
-    over55: [
-      { text: "Enroll in an active senior hiking and water aerobics circuit near the [Noun].", log: "You joined active senior wellness classes near the [Noun].", outcome: "Your leg joints feel like oil-slicked gears! You carry pristine posture and glowing stamina.", adjust: { health: 20, looks: 10, stress: -15, happiness: 20 } },
-      { text: "Purchase a luxury therapeutic custom infrared sauna compartment for the [Noun].", log: "You acquired luxurious thermal detox systems near the [Noun].", outcome: "Extreme, cozy therapy! Golden light melts decades of spinal tension in peaceful, quiet loops.", adjust: { cash: -4500, health: 15, stress: -25, happiness: 25 } }
-    ]
-  },
-  {
-    category: "Corporate Executive Duties",
-    nouns: ["prestigious corner office leather chair", "annual professional keynote presentation", "junior trainee's performance evaluation", "confidential corporate boardroom folder", "charity gala speech notes"],
-    under55: [
-      { text: "Spend long, patient hours mentoring young interns around the [Noun].", log: "You invested patient mentoring hours near the [Noun].", outcome: "They praise your incredible wisdom. Your reputation as an elegant industry leader is rock-solid.", adjust: { smarts: 15, karma: 20, stress: 10, happiness: 15 } },
-      { text: "Enforce aggressive, rigid territory controls to lock competitor advancement near the [Noun].", log: "You prioritized fierce corporate turf defense near the [Noun].", outcome: "You secure your rare executive rank, but associates look at you with cold, shivering fear.", adjust: { looks: 5, karma: -30, stress: 20, happiness: 10 } },
-      { text: "Delegate all complex details of the [Noun] to pursue mid-day premium golf lessons.", log: "You delegated administrative details of the [Noun] for recreation.", outcome: "You relax under sunny fairways, though colleagues note your slipping focus with quiet whispers.", adjust: { health: 8, stress: -15, smarts: -10 } }
-    ],
-    over55: [
-      { text: "Negotiate a luxurious part-time advisory contract linked to the [Noun].", log: "You secured a low-stress advisory contract with the [Noun].", outcome: "VICTORY! You make fine money while returning home early to enjoy cozy afternoon tea.", adjust: { cash: 12000, stress: -25, happiness: 25, smarts: 15 } },
-      { text: "Demand complete administrative obedience and work 14-hour days near the [Noun].", log: "You worked competitive corporate hours near the [Noun].", outcome: "Your bank balances swell, but your physical stamina is totally exhausted, causing minor shivers.", adjust: { cash: 25000, health: -18, stress: 30, happiness: -10 } }
-    ]
-  },
-  {
-    category: "Hobby Crafting & Creation",
-    nouns: ["brass-trimmed woodcarving workbench", "vintage leather-bound journal", "collector-edition acoustic cello", "professional digital canvas easel", "hand-stitched scenic tapestry loom"],
-    under55: [
-      { text: "Devote continuous weekend hours to crafting handmade assets with the [Noun].", log: "You crafted exquisite, refined items using the [Noun].", outcome: "Masterpiece production! A local artistic registry displays your design with elite credits.", adjust: { happiness: 30, smarts: 15, looks: 10, stress: -15 } },
-      { text: "Buy premium, highly expensive professional gears for the [Noun] but let them sit in dust.", log: "You spent heavily on unutilized accessories for the [Noun].", outcome: "The gorgeous wooden parts look shiny, though they serve purely as expensive garage decoration.", adjust: { cash: -2400, happiness: 5, stress: 5 } },
-      { text: "Host a delightful, free weekend tutorial class centered around the [Noun].", log: "You hosted civic amateur tutorials in the workshop using the [Noun].", outcome: "Warm smiles! The community adores your generous spirit and gifts you high-quality cookies.", adjust: { karma: 25, happiness: 25, stress: -10 } }
-    ],
-    over55: [
-      { text: "Construct a professional custom climate-controlled studio for the [Noun].", log: "You built an exquisite soundproof studio for the [Noun].", outcome: "Absolute creative shelter! You escape domestic noise in custom, perfect sonic insulation.", adjust: { cash: -12000, happiness: 35, stress: -20 } },
-      { text: "Spend thousands importing original raw teakwood and premium accessories for the [Noun].", log: "You imported fine raw assets to optimize the [Noun].", outcome: "Stellar performance! The raw material smells superb, elevating your creations into heirloom art.", adjust: { cash: -5000, looks: 15, happiness: 20 } }
-    ]
-  },
-  {
-    category: "Suburban Estate Maintenance",
-    nouns: ["automated lawn sprinkler controller", "rare Japanese maple tree sapling", "backyard stone fire pit terrace", "solar panel roof array", "deluxe bird feeding pole"],
-    under55: [
-      { text: "Perform the heavy digging and soil work around the [Noun] manually.", log: "You completed intensive manual estate labor around the [Noun].", outcome: "Sweat pours downs, but your core abdominal strength feels legendary! Your estate looks beautiful.", adjust: { health: 18, looks: 10, cash: -150, stress: 10 } },
-      { text: "Hire senior licensed landscape professionals to execute designs around the [Noun].", log: "You contracted professional service firms for the [Noun].", outcome: "Flawless, gorgeous result! Neighbors pause to click photos of your lush, high-contrast gardens.", adjust: { cash: -3500, stress: -20, happiness: 15 } },
-      { text: "Pour generic gray industrial asphalt slabs over the lawn to eliminate the [Noun] work.", log: "You concrete-covered garden areas to bypass the [Noun] care.", outcome: "Mowing is officially over, but your neighbors groan loudly at the brutalist suburban gray slab.", adjust: { karma: -20, looks: -10, cash: -600, stress: -15 } }
-    ],
-    over55: [
-      { text: "Exhibit your finished garden spaces with the [Noun] in local botanical contests.", log: "You exhibited organic estate achievements featuring the [Noun].", outcome: "You win first-place gold! Real estate guides praise your immaculate, high-value visual taste.", adjust: { looks: 20, happiness: 25, stress: -10 } },
-      { text: "Engage in furious, legalistic squabbles with city clerks over the [Noun] boundary limits.", log: "You initiated neighborhood legal disputes regarding the [Noun].", outcome: "A tense stand-off at city halls! You defend your boundaries, but your blood pressure is red.", adjust: { stress: 25, karma: -15, happiness: -15 } }
-    ]
-  },
-  {
-    category: "Adventure & Leisure Tours",
-    nouns: ["panoramic Mediterranean cruise ticket", "luxurious leather luggage set", "high-altitude mountain hiking pole", "cozy scenic train compartment ride", "private coastal cabin contract"],
-    under55: [
-      { text: "Take an extensive sabbatical to explore beautiful historic libraries with the [Noun].", log: "You took academic travel sabbaticals using the [Noun].", outcome: "Your minds expand beautifully! You write detailed diaries and feel deeply cultured and quiet.", adjust: { smarts: 25, cash: -3000, stress: -20, happiness: 20 } },
-      { text: "Enroll in high-strain, extreme wilderness survival camps holding the [Noun].", log: "You completed extreme wilderness physical camps near the [Noun].", outcome: "You freeze in severe rainstorms and tear your calf muscle climbing granite blocks. Exhilarating but painful.", adjust: { health: -15, smarts: 10, stress: 15, happiness: 15 } },
-      { text: "Stay home and study ancient navigation books instead of utilizing the [Noun].", log: "You stayed home to study navigation papers, saving the [Noun].", outcome: "Superb, low-cost wisdom! You spend zero dollars and master the global stars with tea.", adjust: { smarts: 18, stress: -15, happiness: 10 } }
-    ],
-    over55: [
-      { text: "Rent a fabulous private villa on the Italian coast, fully utilizing the [Noun].", log: "You booked fabulous coastal Italian villas featuring the [Noun].", outcome: "Heavenly vibes! You watch azure tides crash under green olive trees, sipping rich wine.", adjust: { cash: -8000, happiness: 35, health: 12, looks: 15, stress: -30 } },
-      { text: "Embark on an elite around-the-world cruise using a premium penthouse with the [Noun].", log: "You booked a premium global cruise suite using the [Noun].", outcome: "Absolute royalty treatment! The captain personally feeds you caviar, though your bank balances drop.", adjust: { cash: -15000, happiness: 40, looks: 10, stress: -25 } }
-    ]
-  },
-  {
-    category: "Locomotor & Joint Support",
-    nouns: ["comforting heated knee wrap", "ergonomic rolling desk chair", "organic ginger health syrup bottle", "highly cushioned walking sneakers", "soothing mineral bath salts"],
-    under55: [
-      { text: "Switch entire physical routines to gentle, low-impact swimming paired with the [Noun].", log: "You adapted physical routines to gentle swimming with the [Noun].", outcome: "Your spine and joints feel fully decompressed! You stand tall and move like an athlete.", adjust: { health: 22, looks: 12, stress: -15, happiness: 20 } },
-      { text: "Force through brutal, heavy physical squats ignoring the [Noun] warnings.", log: "You strained weak knee joints ignoring the [Noun] warnings.", outcome: "A loud POP sounds in your left knee. You tear your cartilage, requiring walking crutches.", adjust: { health: -25, looks: -5, stress: 20, cash: -1500 } },
-      { text: "Schedule routine luxury restorative therapeutic massages using the [Noun].", log: "You booked restorative physiological massage routes near the [Noun].", outcome: "Delightful relief! Your muscles feel soft, releasing decades of corporate office tension.", adjust: { cash: -600, health: 15, stress: -25, happiness: 25 } }
-    ],
-    over55: [
-      { text: "Redecorate your entire living space with luxurious orthopedic seating featuring the [Noun].", log: "You furnished your estate with ergonomic cushions near the [Noun].", outcome: "Premium absolute comfort! You watch movies with zero lumbar fatigue, feeling extremely comfy.", adjust: { cash: -3500, health: 12, stress: -20, happiness: 20 } },
-      { text: "Sit on cozy heating pads and delegate all heavy laundry lifting and tasks near the [Noun].", log: "You delegated domestic lifting to junior family near the [Noun].", outcome: "You rest your joints in pure, cozy lazy luxury, while the grandkids get a great chore workout.", adjust: { health: 10, stress: -15, happiness: 15, karma: 10 } }
-    ]
-  },
-  {
-    category: "Civic & Local Leadership",
-    nouns: ["local charity fundraising registry", "neighborhood watch community radio", "town hall ballot proposal", "historic district renovation plan", "municipal library directory"],
-    under55: [
-      { text: "Volunteer detailed hours to manage senior community programs around the [Noun].", log: "You volunteered organizational leadership for the [Noun].", outcome: "The city honors your superb, generous civic spirit with a public brass medal of appreciation.", adjust: { karma: 25, smarts: 12, stress: 10, happiness: 20 } },
-      { text: "Ignore all local district meetings to play complex computer simulation games near the [Noun].", log: "You ignored town meetings to enjoy deep digital PC strategy near the [Noun].", outcome: "You conquer hypothetical empires in cool dark rooms, though local park grounds continue decaying.", adjust: { smarts: 15, karma: -15, stress: -15 } },
-      { text: "Coordinate a strict neighborhood safety patrol using the [Noun] network.", log: "You structured local watch patrols using the [Noun].", outcome: "Local crime rates plummet! Parents praise your proactive stewardship of suburban corridors.", adjust: { karma: 20, smarts: 10, stress: 15, happiness: 15 } }
-    ],
-    over55: [
-      { text: "Launch a high-stakes campaign for the local city council seat linked to the [Noun].", log: "You ran campaigns for regional council seats using the [Noun].", outcome: "VICTORY! You won the election! You now write municipal code, wielding superb local influence.", adjust: { smarts: 20, looks: 15, stress: 25, happiness: 25 } },
-      { text: "Fund a glorious public wall mural celebrating history near the [Noun] corridor.", log: "You financed historic community art corridor projects near the [Noun].", outcome: "Beautiful watercolor arrays! The entire neighborhood gathers to toast your majestic artistic patronage.", adjust: { cash: -4000, looks: 15, karma: 25, happiness: 25 } }
-    ]
-  },
-  {
-    category: "Household Smart Technology",
-    nouns: ["hands-free voice command hub", "smart biometric health band", "ultra-high-definition smart television screen", "high-capacity home backup generator", "digital asset vault security key"],
-    under55: [
-      { text: "Configure a unified cloud security hub integrating your household and the [Noun].", log: "You synchronized smart household tech around the [Noun].", outcome: "Absolute technical safety! You monitor all locks and circuits from your pocket screen with ease.", adjust: { smarts: 18, cash: -600, stress: -12, happiness: 15 } },
-      { text: "Ditch modern electronics, tossing the [Noun] in the trash to live like a pioneer.", log: "You abandoned modern household devices, discarding the [Noun].", outcome: "Quiet, romantic candlelit evenings! However, typing documents on old rusty metal typewriters is exhausting.", adjust: { smarts: -5, stress: 15, happiness: 10, health: -5 } },
-      { text: "Set up bulletproof encrypted offline hardware backups for the [Noun] details.", log: "You set up offline encrypted archives for the [Noun].", outcome: "Excellent technical shielding! Your records are fully fortified against global modern web hacks.", adjust: { smarts: 20, cash: -300, stress: -10 } }
-    ],
-    over55: [
-      { text: "Equip your entire estate with premium voice-activation panels paired with the [Noun].", log: "You automated your estate via voice controls near the [Noun].", outcome: "You whisper to the drywall, and organic tea is heated. Visitors believe you reside in a spaceship.", adjust: { cash: -2500, happiness: 22, stress: -15 } },
-      { text: "Scream in deep suspicious frustration, treating the [Noun] with profound contempt.", log: "You violently rejected smart tech devices near the [Noun].", outcome: "In your heated anger, you accidentally strike your thumb, causing a minor throbbing bruise.", adjust: { health: -5, stress: 20, happiness: -15, smarts: -8 } }
-    ]
-  }
-];
-
-const MATURE_SITUATIONS = [
-  { desc: "An unexpected legacy question arises as you contemplate how to allocate the [Noun].", titlePrefix: "Legacy Dilemma over the" },
-  { desc: "Your physiological energy takes a sudden dip, forcing you to reconsider your physical connection to the [Noun].", titlePrefix: "Energy Crisis with the" },
-  { desc: "Your family holds a serious holiday dinner discussion regarding who will inherit the [Noun] someday.", titlePrefix: "Inheritance Dispute over the" },
-  { desc: "A late-career industry development forces you to make a final administrative stand over the [Noun].", titlePrefix: "Late-Career Clash over the" },
-  { desc: "Your partner urges you to put down your stressful corporate work and focus on the quiet enjoyment of the [Noun].", titlePrefix: "Retirement Push and the" },
-  { desc: "A strict regional suburban guild demands you explain your aesthetic choices regarding the [Noun] at a town hall meeting.", titlePrefix: "Town Hall Debate on the" },
-  { desc: "A rare opportunity to acquire or upgrade the [Noun] presents itself, promising exceptional prestige.", titlePrefix: "Prestige Search for the" },
-  { desc: "Your demanding late-career duties trigger acute physical exhaustion, prompting a deep, quiet look at the [Noun].", titlePrefix: "Midnight Burnout and the" },
-  { desc: "An old lifelong friend calls out of the blue, inviting you onto a nostalgic journey revolving around the [Noun].", titlePrefix: "Nostalgic Voyage around the" },
-  { desc: "A sudden financial audit or legal query requires you to account for all ledger records concerning the [Noun].", titlePrefix: "Audit Warning about the" }
-];
-
-interface GeneratedMatureScenarioDef {
-  id: string;
-  title: string;
-  description: string;
-  minAge: number;
-  maxAge: number;
-  choices: {
-    text: string;
-    outcomeText: string;
-    adjustments: {
-      happiness?: number;
-      health?: number;
-      smarts?: number;
-      looks?: number;
-      stress?: number;
-      karma?: number;
-      cash?: number;
-    };
-    logText: string;
-  }[];
-}
-
-const generateAllMatureScenarios = (): GeneratedMatureScenarioDef[] => {
-  const result: GeneratedMatureScenarioDef[] = [];
-  let generatedCount = 0;
-
-  // 10 themes * 5 nouns * 10 situations = 500 unique permutations!
-  for (let t = 0; t < MATURE_THEMES.length; t++) {
-    const theme = MATURE_THEMES[t];
-    for (let n = 0; n < theme.nouns.length; n++) {
-      const noun = theme.nouns[n];
-      for (let s = 0; s < MATURE_SITUATIONS.length; s++) {
-        const sit = MATURE_SITUATIONS[s];
-
-        const scenarioId = `mature_gen_${t}_n${n}_s${s}`;
-        const uppercaseNoun = noun.charAt(0).toUpperCase() + noun.slice(1);
-        const title = `${sit.titlePrefix} ${uppercaseNoun} 👓`;
-        const description = `${sit.desc.replace(/\[Noun\]/g, noun)} Real mature life requires wisdom and careful stewardship of resources.`;
-
-        // Age division: even indices target 45-54 (under 55), odd indices target 55-64 (over 55)
-        const isUnder55 = (generatedCount % 2 === 0);
-        const minAge = isUnder55 ? 45 : 55;
-        const maxAge = isUnder55 ? 54 : 64;
-
-        // Build choices based on age range mapping
-        const choices = theme.under55.map(u => ({
-          text: u.text.replace(/\[Noun\]/g, noun),
-          outcomeText: u.outcome.replace(/\[Noun\]/g, noun),
-          adjustments: u.adjust,
-          logText: u.log.replace(/\[Noun\]/g, noun)
-        }));
-
-        // Add over-55 choices if appropriate
-        if (!isUnder55) {
-          theme.over55.forEach(o => {
-            choices.push({
-              text: o.text.replace(/\[Noun\]/g, noun),
-              outcomeText: o.outcome.replace(/\[Noun\]/g, noun),
-              adjustments: o.adjust,
-              logText: o.log.replace(/\[Noun\]/g, noun)
-            });
-          });
-        }
-
-        result.push({
-          id: scenarioId,
-          title,
-          description,
-          minAge,
-          maxAge,
-          choices
-        });
-
-        generatedCount++;
-      }
-    }
-  }
-
-  return result;
-};
-
-// Map career gated events
-const rawGatedEvents: GameEvent[] = MATURE_GATED_EVENTS.map(evt => {
-  return {
-    id: evt.id,
-    title: evt.title,
-    description: evt.description,
-    category: 'Adulthood',
-    condition: (state: CharacterState) => {
-      const age = state.characterInfo?.age;
-      const isRightAge = age >= 45 && age <= 64;
-      if (!isRightAge) return false;
-      if (evt.conditionChecker) {
-        return evt.conditionChecker(state);
-      }
-      return true;
-    },
-    choices: evt.choices.map(c => ({
-      choiceText: c.text,
-      outcomeText: c.outcomeText,
-      effect: (state: CharacterState) => {
-        adjustStats(state, c.adjustments);
-        if (c.adjustments.cash) {
-          state.finances.cashBalance = Math.max(state.finances.cashBalance + c.adjustments.cash, -500000);
-        }
-        state.log.push(`Age ${state.characterInfo.age}: ${c.logText}`);
-      }
-    }))
-  };
-});
-
-// Map generated events
-const generatedScenarios = generateAllMatureScenarios();
-
-const rawGeneratedEvents: GameEvent[] = generatedScenarios.map(evt => {
-  return {
-    id: evt.id,
-    title: evt.title,
-    description: evt.description,
-    category: 'Adulthood',
-    condition: (state: CharacterState) => {
-      const age = state.characterInfo?.age;
-      if (age === undefined) return false;
-      return age >= evt.minAge && age <= evt.maxAge;
-    },
-    choices: evt.choices.map(c => ({
-      choiceText: c.text,
-      outcomeText: c.outcomeText,
-      effect: (state: CharacterState) => {
-        adjustStats(state, c.adjustments);
-        if (c.adjustments.cash) {
-          state.finances.cashBalance = Math.max(state.finances.cashBalance + c.adjustments.cash, -500000);
-        }
-        state.log.push(`Age ${state.characterInfo.age}: ${c.logText}`);
-      }
-    }))
-  };
-});
-
 export const adulthoodMatureEvents: GameEvent[] = [
-  ...rawGatedEvents,
-  ...rawGeneratedEvents
+  // =========================================================================
+  // SUB-TIER 1: EARLY MATURE ADULTHOOD (Ages 46–53)
+  // Focusing on empty-nest adjustments, peak asset protection, mid-life hobbies,
+  // late-stage partner dynamics, and body alerts.
+  // =========================================================================
+  {
+    id: 'mat_empty_nest_01',
+    title: 'The Silent Hallway 🕊️',
+    description: 'The front door clicks shut. Your youngest child [Child] has packed their last dynamic storage box and exited the driveway for university. The silence in the hallway is heavy and unexpected.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const hasLivingChild = state.relationships.some(r => r.relationshipType === 'Child' && !r.isDead);
+      return age >= 46 && age <= 53 && hasLivingChild;
+    },
+    choices: [
+      {
+        choiceText: 'Spend ten thousand dollars to transform their bedroom into a professional micro-artisan workspace.',
+        outcomeText: 'You load the empty room with woodcarving and textile tools. You miss their laughter, but focus your energy on tactile crafting.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 15, stress: -15, smarts: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 10000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Transformed [Child]\'s empty bedroom into an artisan woodworking workshop.`);
+        }
+      },
+      {
+        choiceText: 'Call them nightly to offer persistent parental guidance and ask about their meal preparation schedules.',
+        outcomeText: 'They sound slightly exasperated by your continuous check-ins, but appreciate the deep emotional anchor you provide.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 10, stress: 10 });
+          const child = state.relationships.find(r => r.relationshipType === 'Child' && !r.isDead);
+          if (child) child.relationshipValue = Math.min(100, child.relationshipValue + 15);
+          state.log.push(`Age ${state.characterInfo.age}: Established high-frequency communication patterns to guide [Child] in college.`);
+        }
+      },
+      {
+        choiceText: 'Plan an elaborate domestic redesign with your partner to celebrate your newfound marital freedom.',
+        outcomeText: 'You and [Partner] spend weekends picking fresh carpets and painting the study. The structural change brings you beautifully closer.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 20, stress: -10 });
+          const partner = state.relationships.find(r => r.relationshipType === 'Partner' && !r.isDead);
+          if (partner) partner.relationshipValue = Math.min(100, partner.relationshipValue + 20);
+          state.log.push(`Age ${state.characterInfo.age}: Redecorated the family home with [Partner] to toast your empty nest.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_convertible_01',
+    title: 'The Crimson Arrow 🏎️',
+    description: 'A pristine vintage crimson convertible sit on the local dealership lot. The window sticker is bright and expensive, but the chrome details smell of open highways and forgotten youth.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 46 && age <= 53 && state.finances.cashBalance >= 35000;
+    },
+    choices: [
+      {
+        choiceText: 'Purchase the vehicle with thirty-five thousand dollars cash, refusing to settle for suburban boredom.',
+        outcomeText: 'The dealer grins as you drive off. The engine purrs beautifully, and you feel the direct rush of sixty miles an hour.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 25, looks: 15, stress: -15 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 35000, -500000);
+          state.assets.push({
+            id: `asset_crimson_${Date.now()}`,
+            name: 'Crimson Convertible',
+            type: 'vehicle',
+            purchasePrice: 35000,
+            currentValue: 32000,
+            annualUpkeep: 1500,
+            isFinanced: false,
+            loanDetails: null,
+            category: 'Exotic',
+            condition: 100
+          });
+          state.log.push(`Age ${state.characterInfo.age}: Acquired a high-performance Crimson Convertible to challenge suburban routine.`);
+        }
+      },
+      {
+        choiceText: 'Walk away and allocate those specific funds directly to blue-chip dividend index trusts.',
+        outcomeText: 'A sober, flawless decision. You enjoy no coastal wind, but your financial projections show serene long-term stability.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 20, stress: -10, happiness: 5 });
+          state.log.push(`Age ${state.characterInfo.age}: Disciplined your impulses, directing automotive capital toward dividend growth files.`);
+        }
+      },
+      {
+        choiceText: 'Rent the sports car for a single weekend trip down the coast to satisfy your driving curiosity.',
+        outcomeText: 'You burn two hundred dollars on gas and rental fees, returning the keys on Monday with your mid-life itch completely scratched.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 15, stress: -5 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 400, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Rented a luxury sports convertible for a short scenic coastal loop.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_reunion_01',
+    title: 'The 30-Year High School Reunion 🎓',
+    description: 'An invitation to your 30-year high school reunion arrives with a glossy, embossed paper layout. Old classmates are gathering to showcase their family units, executive ranks, and hairline drifts.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 46 && age <= 53;
+    },
+    choices: [
+      {
+        choiceText: 'Arrive in an exquisite designer suit, making sure everyone hears details of your career conquests.',
+        outcomeText: 'You hold court near the punch bowl. Several old peers look envious of your status, though you feel slightly shallow.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 15, looks: 10, karma: -10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 800, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Flaunted economic assets and fine tailoring at your 30-year high school reunion.`);
+        }
+      },
+      {
+        choiceText: 'Attend quietly in modest apparel, focusing strictly on Rekindling ancient, honest friendships.',
+        outcomeText: 'You spend hours talking with old friends under soft school gym lighting. You discover deep mutual memories that feel genuine.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 20, stress: -15, karma: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Reconnected warmly with childhood companions at the high school reunion.`);
+        }
+      },
+      {
+        choiceText: 'Skip the gathering entirely, preferring to read a novel alone with a hot cup of black tea.',
+        outcomeText: 'The school group chats buzz with photos you never see. You enjoy a silent, perfectly peaceful evening at home.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -20, happiness: 10 });
+          state.log.push(`Age ${state.characterInfo.age}: Declined your high school reunion to guard your personal quietude.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_hobbies_woodworking',
+    title: 'The Antique Walnut Joinery 🪚',
+    description: 'The raw, organic textures of native oak and black walnut inspire you. You feel a sudden, passionate urge to master the ancient craft of manual furniture joinery.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 46 && age <= 53;
+    },
+    choices: [
+      {
+        choiceText: 'Purchase a massive cast-iron workbench and a suite of premium Japanese hand planes for five thousand dollars.',
+        outcomeText: 'Your garage smells beautifully of sweet cedar. After weeks of scraping, you produce a solid walnut table that is heirloom quality.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 25, smarts: 15, stress: -20 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 5000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Hand-crafted a solid heirloom walnut dining table in your new woodshop.`);
+        }
+      },
+      {
+        choiceText: 'Buy cheap construction scrap pallets and basic hardware tools to build a rustic doghouse.',
+        outcomeText: 'You get three painful splinters but successfully construct a shaky shelter. It is rustic and functional, cost-effective.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -5, happiness: 10, stress: -10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 100, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Built a functional rustic pet kennel from reclaimed shipping pallets.`);
+        }
+      },
+      {
+        choiceText: 'Enroll in a local craft master circle, sharing tool sets and learning historic dovetail secrets.',
+        outcomeText: 'You build outstanding neighborhood bonds while perfecting your cutting techniques. You earn high community praise.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 18, happiness: 15, karma: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 500, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Enrolled in a local artisan woodworking apprenticeship.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_hobbies_wine_cellar',
+    title: 'The Vintage Ferment 🍷',
+    description: 'You decide to establish an experimental micro-winery in your dry basement, aiming to ferment raw, high-altitude mountain grape harvests.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 46 && age <= 53;
+    },
+    choices: [
+      {
+        choiceText: 'Import temperature-controlled oak fermenters and premium grape tons for four thousand dollars.',
+        outcomeText: 'Your garage looks like an elite vineyard lab. A year later, your home vintage is rich, balanced, and complex.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 30, smarts: 12, stress: -15 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 4000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Fermented a superb micro-batch Cabernet Sauvignon in your basement cellars.`);
+        }
+      },
+      {
+        choiceText: 'Ferment cheap concord store juices using water jugs and baker yeast inside your closet.',
+        outcomeText: 'The mixture smells intensely like stale vinegar. The resulting liquid is highly alcoholic but physically painful to swallow.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -15, happiness: -5, smarts: -5 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 150, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Brewed carbonated table juice home-alcohol with catastrophic, battery-acid flavor.`);
+        }
+      },
+      {
+        choiceText: 'Join a suburban wine-pressing cooperative to split equipment costs and enjoy joint Tastings.',
+        outcomeText: 'A delightful experience! You spend pleasant autumn afternoons pressing grapes with neighbors, building warm alliances.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 20, stress: -10, karma: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Joined cooperative suburban grape pressing workshops.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_career_plateau',
+    title: 'The Permanent Horizon 💼',
+    description: 'A director twenty years younger than you is named VP of operations. You suddenly realize your trajectory at the company has hit its absolute permanent ceiling.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const isEmployed = state.characterInfo.currentOccupation !== 'Unemployed' && state.characterInfo.currentOccupation !== 'Retired';
+      return age >= 46 && age <= 53 && isEmployed;
+    },
+    choices: [
+      {
+        choiceText: 'Accept your position gracefully, redirecting your mental energy entirely into personal crafts and home projects.',
+        outcomeText: 'You stop stressing over board slides. Your career stays slow, but your emotional life flourishes.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -30, happiness: 20, health: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Redirected mental energies away from executive ladders into family and crafts.`);
+        }
+      },
+      {
+        choiceText: 'Work intense eighty-hour weeks to challenge the board and prove your indispensability.',
+        outcomeText: 'Your analytics are flawless, but you collapse on your couch with high blood pressure and an aching neck.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: 30, health: -20, smarts: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Fought career plateaus with exhausting, high-intensity overtime routines.`);
+        }
+      },
+      {
+        choiceText: 'Quiet-quit immediately, doing only the minimum tasks needed to keep collecting your heavy salary checks.',
+        outcomeText: 'You Spend hours playing browser chess and leaving on time. Nobody notices your slow output, and you enjoy free lunches.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -25, happiness: 10, karma: -15 });
+          state.log.push(`Age ${state.characterInfo.age}: Commenced quiet-quitting office duties to reclaim personal hours.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_lumbago_01',
+    title: 'The Garden Defiance 🌿',
+    description: 'You bend over at a sharp angle to haul a hundred-pound sack of wet organic compost, ignoring warm stretch suggestions.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 46 && age <= 53;
+    },
+    choices: [
+      {
+        choiceText: 'Admit defeat instantly, lying on firm kitchen floorboards to rest with deep ice packs.',
+        outcomeText: 'You look ridiculous on the linoleum, but your spine slowly decompresses without permanent structural damage.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -5, stress: -5, happiness: -5 });
+          state.log.push(`Age ${state.characterInfo.age}: Rested a strained back immediately, avoiding lumbar deterioration.`);
+        }
+      },
+      {
+        choiceText: 'Push through the pain to wheel the compost bags across the yard to show you are still in prime condition.',
+        outcomeText: 'A sickening pop rings in your lower back. You collapse in the grass and have to be carried inside by neighbors.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -25, stress: 25, happiness: -20, looks: -5 });
+          state.log.push(`Age ${state.characterInfo.age}: Strained lumbar spine discs through stubborn gardening pride, suffering acute injury.`);
+        }
+      },
+      {
+        choiceText: 'Book immediate private clinical dry-needling and spinal rehabilitation to rebuild core stability.',
+        outcomeText: 'The physical therapist is tough, but they correct your posture and strengthen your core muscles.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 15, stress: -10, smarts: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 1500, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Restored spinal core biomechanics with premium physical therapy (-$1,500).`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_ageism_exclusion',
+    title: 'The Sidelined Invite 📧',
+    description: 'You note that you are being left off invitation lists for important early strategic brainstorming emails, which are now dominated by junior managers.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const isEmployed = state.characterInfo.currentOccupation !== 'Unemployed' && state.characterInfo.currentOccupation !== 'Retired';
+      return age >= 46 && age <= 53 && isEmployed;
+    },
+    choices: [
+      {
+        choiceText: 'Document the patterns and file a formal compliance memo with Human Resources regarding age bias.',
+        outcomeText: 'The legal department panics. They mandate new inclusion rules, and you are quietly re-invited to core meetings.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: 20, smarts: 10, happiness: 5 });
+          state.log.push(`Age ${state.characterInfo.age}: Logged formal legal protests regarding structural age exclusion at the firm.`);
+        }
+      },
+      {
+        choiceText: 'Schedule a peaceful coffee session with the lead junior manager to share strategic advisory aid.',
+        outcomeText: 'You help them avoid a massive database integration pitfall. They realize your wisdom is an absolute cheat-code.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: 25, smarts: 15, stress: -10 });
+          state.log.push(`Age ${state.characterInfo.age}: Mentored key junior directors to preserve strategic boardroom equity.`);
+        }
+      },
+      {
+        choiceText: 'Ignore the emails entirely, leaving the office early on Fridays to spend time hiking.',
+        outcomeText: 'You enjoy gorgeous sunny trails. Let the youngsters burn their weekends troubleshooting the code.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 15, stress: -25, happiness: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Embraced strategic meetings exclusion, utilizing hours for personal health.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_parent_assisted_living',
+    title: 'The Parent Assisted Move 👵',
+    description: 'Your aging parent [Parent] suffers a series of dizzy spells. Their medical charts indicate they should no longer reside in isolated rural independence.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const hasLivingParent = state.relationships.some(r => r.relationshipType === 'Parent' && !r.isDead);
+      return age >= 46 && age <= 53 && hasLivingParent;
+    },
+    choices: [
+      {
+        choiceText: 'Finance an exquisite private cottage inside an elite assisted living estate for fifteen thousand dollars.',
+        outcomeText: '[Parent] settles into a gorgeous suite with continuous nursing care and beautiful gardens. Your cash balance is heavily depleted.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 15, stress: -20, karma: 25 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 15000, -500000);
+          const parent = state.relationships.find(r => r.relationshipType === 'Parent' && !r.isDead);
+          if (parent) parent.relationshipValue = Math.min(100, parent.relationshipValue + 30);
+          state.log.push(`Age ${state.characterInfo.age}: Sponsored premium professional assisted living care facilities for [Parent] (-$15,000).`);
+        }
+      },
+      {
+        choiceText: 'Invite [Parent] to reside permanently in your guest bedroom, taking on direct caregiving duties.',
+        outcomeText: 'You cook every meal and manage their drug charts. It is physically exhausting, but your family bond is unbreakable.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -10, stress: 30, happiness: 15, karma: 35 });
+          const parent = state.relationships.find(r => r.relationshipType === 'Parent' && !r.isDead);
+          if (parent) parent.relationshipValue = 100;
+          state.log.push(`Age ${state.characterInfo.age}: Welcomed [Parent] into your residential house to handle direct daily care.`);
+        }
+      },
+      {
+        choiceText: 'Hire a part-time visiting home-health nurse coordinator to check their vital metrics weekly.',
+        outcomeText: 'You preserve their independent home structure. The solution is balanced, though you worry during stormy nights.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: 15, smarts: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 3500, -500000);
+          const parent = state.relationships.find(r => r.relationshipType === 'Parent' && !r.isDead);
+          if (parent) parent.relationshipValue = Math.min(100, parent.relationshipValue + 10);
+          state.log.push(`Age ${state.characterInfo.age}: Hired visiting geriatric nurses to support [Parent] in their independent house.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_bifocals_01',
+    title: 'The Shrinking Font 👓',
+    description: 'You find yourself holding reading materials at complete arm\'s length to read small letters. It is time to face the optometrist.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 46 && age <= 53;
+    },
+    choices: [
+      {
+        choiceText: 'Purchase premium double-glazed progressive designer lenses for eight hundred dollars.',
+        outcomeText: 'You look highly intellectual! You read menus in dim restaurants instantly with zero squinting.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 15, looks: 5, stress: -10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 800, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Bought premium progressive lenses to correct mature vision decay.`);
+        }
+      },
+      {
+        choiceText: 'Buy cheap five-dollar magnifying readers from a nearby drugstore rack, leaving pairs in different rooms.',
+        outcomeText: 'You keep losing them, and the plasticky frames slide off your nose, but your budget remains untouched.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 5, looks: -10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 20, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Deployed cheap drugstore reading magnifying glasses across the house.`);
+        }
+      },
+      {
+        choiceText: 'Decline any medical visual aids, claiming you can read perfectly by adjusting ambient lighting.',
+        outcomeText: 'You squint furiously at simple text blocks, suffering massive headaches and bumping your knees on footstools.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -10, stress: 15, happiness: -10 });
+          state.log.push(`Age ${state.characterInfo.age}: Stubbornly refused reading glasses, causing persistent optical headaches.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_re_eval_partner',
+    title: 'The Silent Dinners 🕯️',
+    description: 'With the household quiet and empty, you and [Partner] sit across from each other. You realize the daily conversations have become mechanical.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const isMarried = state.maritalStatus === 'Married';
+      const isPartnerAlive = state.relationships.some(r => r.relationshipType === 'Partner' && !r.isDead);
+      return age >= 46 && age <= 53 && isMarried && isPartnerAlive;
+    },
+    choices: [
+      {
+        choiceText: 'Initiate intensive domestic marriage counseling to rebuild your emotional foundations.',
+        outcomeText: 'The process is raw and difficult, sharing tears over old friction, but you rebuild authentic, warm love.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: 15, happiness: 20 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 3000, -500000);
+          const partner = state.relationships.find(r => r.relationshipType === 'Partner' && !r.isDead);
+          if (partner) partner.relationshipValue = Math.min(100, partner.relationshipValue + 30);
+          state.log.push(`Age ${state.characterInfo.age}: Completed structured couple therapy with [Partner] to heal marital distance.`);
+        }
+      },
+      {
+        choiceText: 'Plan a completely self-guided backpack journey with [Partner] across Europe to recreate initial dating memories.',
+        outcomeText: 'You laugh over missed train platforms and drink inexpensive wine on historic stairs. The physical thrill of dating returns!',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 30, stress: -20, health: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 7000, -500000);
+          const partner = state.relationships.find(r => r.relationshipType === 'Partner' && !r.isDead);
+          if (partner) partner.relationshipValue = Math.min(100, partner.relationshipValue + 25);
+          state.log.push(`Age ${state.characterInfo.age}: Backpacked historic foreign ruins with [Partner], rekindling first love.`);
+        }
+      },
+      {
+        choiceText: 'Settle into a comfortable, independent roommate arrangement, respecting each other\'s physical separation.',
+        outcomeText: 'You sleep in separate beds and focus on your individual hobbies. There are no fights, but the hearth is cold.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -10, happiness: -5 });
+          const partner = state.relationships.find(r => r.relationshipType === 'Partner' && !r.isDead);
+          if (partner) partner.relationshipValue = Math.max(20, partner.relationshipValue - 15);
+          state.log.push(`Age ${state.characterInfo.age}: Settled into polite, emotionally separate roommate habits with [Partner].`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_exec_succession',
+    title: 'The Succession Shadow 👑',
+    description: 'You hold an elite, highly paid senior role. The board begins to issue discreet suggestions regarding who you will mentor as an executive successor.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const isSeniorJob = ['CEO of Tech Startup', 'CEO', 'Corporate CEO', 'Executive', 'President', 'Managing Director', 'Corporate Attorney', 'Senior Developer'].includes(state.characterInfo.currentOccupation || '');
+      return age >= 46 && age <= 53 && isSeniorJob;
+    },
+    choices: [
+      {
+        choiceText: 'Select a brilliant, humble young associate and dedicate hours to mentoring them.',
+        outcomeText: 'They learn your strategic philosophies. Your reputation as an elegant, supportive titan of the industry is secured.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: 25, smarts: 15, stress: 10, happiness: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Hand-crafted an orderly executive mentorship strategy to groom your successor.`);
+        }
+      },
+      {
+        choiceText: 'Consolidate crucial files and client relations to ensure nobody can replace you for another decade.',
+        outcomeText: 'You preserve your powerful grip, but junior colleagues look at you with cold, silent dread.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: 30, happiness: 10, karma: -30 });
+          state.log.push(`Age ${state.characterInfo.age}: Fortified your senior rank aggressively, sidelining all potential successors.`);
+        }
+      },
+      {
+        choiceText: 'Resign unexpectedly to establish a highly exclusive boutique consulting office on your own terms.',
+        outcomeText: 'You walk away on top! Clients follow you immediately, and your hours are suddenly perfectly flexible.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 20, stress: -20, smarts: 10 });
+          state.finances.annualSalary = Math.round(state.finances.annualSalary * 0.85);
+          state.log.push(`Age ${state.characterInfo.age}: Stepped down gracefully to construct a boutique private advisory office.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_cardio_flutters',
+    title: 'The Cardiac Alert 🩺',
+    description: 'During a Routine diagnostic assessment, your physician flags a critical rise in arterial blood pressure levels, demanding lifestyle changes.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 46 && age <= 53;
+    },
+    choices: [
+      {
+        choiceText: 'Transition immediately to a strict dietary regimen containing zero processed foods and zero red meats.',
+        outcomeText: 'You consume organic greens and raw berries. Your physical arteries clear, and your physical vitals look exceptional.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 25, looks: 10, stress: -10, happiness: 10 });
+          state.log.push(`Age ${state.characterInfo.age}: Adopted a clean wellness dietary regimen of raw greens to heal cardiovascular health.`);
+        }
+      },
+      {
+        choiceText: 'Obtain clinical prescription anti-hypertensives, continuing to consume heavy steaks and coffee.',
+        outcomeText: 'The drugs chemically manage your blood pressure, but you feel slightly fatigued and your stomach aches.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 5, stress: 5, happiness: -5 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 400, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Managed arterial cardiovascular warnings using daily chemical prescriptions.`);
+        }
+      },
+      {
+        choiceText: 'Dismiss the numbers as stress-induced anomalies, refusing to change your robust eating routines.',
+        outcomeText: 'You feel a scary, persistent tightness in your chest during stairs, carrying an invisible cardiovascular risk.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -25, stress: 20, happiness: -10 });
+          state.log.push(`Age ${state.characterInfo.age}: Stubbornly dismissed cardiovascular medical diagnostics, carrying heavy risk.`);
+        }
+      }
+    ]
+  },
+
+  // =========================================================================
+  // SUB-TIER 2: LATE MATURE ADULTHOOD (Ages 54–60)
+  // Focusing on early retirement plans, chronic health management, legacy decisions,
+  // grandparenthood, asset preservation, and cellular changes.
+  // =========================================================================
+  {
+    id: 'mat_early_retirement',
+    title: 'The Horizon Blueprint 🏖️',
+    description: 'A wealth planner presents an extensive forecast of your cash balances, indicating that you could technically retire now.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const isEmployed = state.characterInfo.currentOccupation !== 'Unemployed' && state.characterInfo.currentOccupation !== 'Retired';
+      return age >= 54 && age <= 60 && isEmployed;
+    },
+    choices: [
+      {
+        choiceText: 'Initiate immediate retirement sequences to dedicate your life to travel, family, and silent studies.',
+        outcomeText: 'The office coordinates a warm final lunch. You walk out into the bright afternoon sun, completely free.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -40, happiness: 30, health: 15 });
+          state.characterInfo.currentOccupation = 'Retired';
+          state.finances.annualSalary = Math.round(state.finances.annualSalary * 0.4); // Pension or investment yield
+          state.log.push(`Age ${state.characterInfo.age}: Officially retired early from corporate fields to embrace personal studies.`);
+        }
+      },
+      {
+        choiceText: 'Decline early retirement, persisting in your senior role to maximize peak financial assets.',
+        outcomeText: 'Your banking balances bulge magnificently, but you sigh deeply during cold corporate morning stand-ups.',
+        effect: (state: CharacterState) => {
+          state.finances.cashBalance += 30000;
+          adjustStats(state, { stress: 20, health: -10, happiness: -10 });
+          state.log.push(`Age ${state.characterInfo.age}: Chose to accumulate extra capital by deferring retirement structures.`);
+        }
+      },
+      {
+        choiceText: 'Transition into a low-volume part-time independent advisory structure for three hours a week.',
+        outcomeText: 'An exquisite balance! You retain intellectual engagement and an hourly fee while enjoying sleepy mornings.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -20, happiness: 20, smarts: 10 });
+          state.finances.annualSalary = Math.round(state.finances.annualSalary * 0.55);
+          state.log.push(`Age ${state.characterInfo.age}: Restructured career role into a flexible, low-stress executive advisory track.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_cradle_grandchild',
+    title: 'The Grandchild Call 🍼',
+    description: 'Your child [Child] calls you in tears of profound fatigue and joy: they have just welcomed a newborn baby. You are physically a grandparent.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const hasLivingChild = state.relationships.some(r => r.relationshipType === 'Child' && !r.isDead);
+      return age >= 54 && age <= 60 && hasLivingChild;
+    },
+    choices: [
+      {
+        choiceText: 'Allocate ten thousand dollars in cash directly into a high-yield trust for the baby\'s future education.',
+        outcomeText: 'Your child [Child] is deeply touched by your incredible strategic support. Your family is tighter than steel.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 20, karma: 30 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 10000, -500000);
+          const child = state.relationships.find(r => r.relationshipType === 'Child' && !r.isDead);
+          if (child) child.relationshipValue = Math.min(100, child.relationshipValue + 30);
+          state.log.push(`Age ${state.characterInfo.age}: Seeded a $10,000 collegiate trust for your new grandchild.`);
+        }
+      },
+      {
+        choiceText: 'Fly out immediately to complete nocturnal baby duty and run household household operations.',
+        outcomeText: 'You change dozens of diaper complexes and brew bottles in dim lighting. You are physically spent, but your core registry fills with love.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -15, stress: 15, happiness: 35, karma: 35 });
+          const child = state.relationships.find(r => r.relationshipType === 'Child' && !r.isDead);
+          if (child) child.relationshipValue = 100;
+          state.log.push(`Age ${state.characterInfo.age}: Traveled immediately to support [Child]\'s exhausting baby care duties.`);
+        }
+      },
+      {
+        choiceText: 'Send a luxurious velvet stroller package with warm written blessings from a comfortable distance.',
+        outcomeText: 'They appreciate the premium gear, and you preserve your perfectly silent, un-interrupted afternoon study schedules.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 15, stress: -10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 1200, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Funded luxury nursery apparatus for grandchild from a peaceful domestic distance.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_will_drafting_legacy',
+    title: 'The Ink and Legacy 📜',
+    description: 'A sharp, frosty winter night reminds you of your absolute mortality. You sit down with a legal counselor to formalize your legal will and digital assets.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60;
+    },
+    choices: [
+      {
+        choiceText: 'Allocate your future wealth strictly to your direct biological descendants, ensuring bloodline integrity.',
+        outcomeText: 'Your trust structures are airtight. Your children approve of your protective stewardship of the family legacy.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 15, happiness: 10, stress: -10 });
+          const child = state.relationships.find(r => r.relationshipType === 'Child' && !r.isDead);
+          if (child) child.relationshipValue = Math.min(100, child.relationshipValue + 15);
+          state.log.push(`Age ${state.characterInfo.age}: Executed a strict biological inheritance trust to safeguard estate assets.`);
+        }
+      },
+      {
+        choiceText: 'Designate fifty percent of your wealth to verified environmental and global medical research funds.',
+        outcomeText: 'The legal team files your philanthropic deeds. You carry a warm, glowing sense of cosmic purpose, helping humanity.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: 40, happiness: 25, stress: -10 });
+          state.log.push(`Age ${state.characterInfo.age}: Structured your will to disburse half of your legacy assets to medical research foundations.`);
+        }
+      },
+      {
+        choiceText: 'Incorporate complex educational milestone gates before any heirs can access trust funds.',
+        outcomeText: 'Your counselor smiles at your meticulous design. Your future heirs must secure scientific credentials or run companies before touching cash.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 20, stress: 10 });
+          state.log.push(`Age ${state.characterInfo.age}: Drafted rigorous academic milestone clauses into your family trust paperwork.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_joint_stiffness',
+    title: 'The Damp Morning Creak 🦴',
+    description: 'A cold, high-humidity rainstorm sets in, and you wake with a dull, aching heat in both your kneecaps and index knuckles.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60;
+    },
+    choices: [
+      {
+        choiceText: 'Commence a daily schedule of advanced turmeric supplements and low-impact warm-water swimming.',
+        outcomeText: 'The clinical pool therapy works magic! Your bone frames feel wonderfully oiled and loose.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 20, looks: 5, stress: -10, happiness: 15 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 350, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Healed early cartilage friction via low-impact dynamic swimming schedules.`);
+        }
+      },
+      {
+        choiceText: 'Swallow maximal doses of cheap over-the-counter anti-inflammatories, refusing to adapt your physical patterns.',
+        outcomeText: 'The aching pain fades, but the chemicals burn your stomach linings, causing frequent burning digestive alerts.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -10, stress: 5, happiness: -5 });
+          state.log.push(`Age ${state.characterInfo.age}: Suppressed joint aches with high-frequency anti-inflammatories, damaging digestive wellness.`);
+        }
+      },
+      {
+        choiceText: 'Install a high-end luxury infrared sauna cabin in your master bathroom to melt bone tension.',
+        outcomeText: 'Absolute heaven! The dry thermal warmth penetrates deep into your joints, melting years of corporate skeletal stress.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 15, stress: -25, happiness: 25, looks: 8 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 6000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Acquired a premium home infrared sauna to relieve physical stiffness (-$6,000).`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_insomnia_anxiety',
+    title: 'The 3:15 AM Vigil 🌑',
+    description: 'You wake with clockwork precision in the dead silence of three in the morning, your mind spinning with passive anxiety regarding the speed of time.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60;
+    },
+    choices: [
+      {
+        choiceText: 'Establish a strict electronic sanctuary, banishing all screens from your bedroom and drinking chamomile tea.',
+        outcomeText: 'The dark silence slowly heals your patterns. You drift into deep, un-interrupted sleep cycles, waking refreshed.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 20, stress: -20, happiness: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Shielded your bedroom from all modern electronic noise to restore deep sleep patterns.`);
+        }
+      },
+      {
+        choiceText: 'Instruct a clinical practitioner to prescribe high-strength sedative sleep aids.',
+        outcomeText: 'You black out instantly upon head touching pillow. However, you wake carrying a thick, chemical grogginess that persists until noon.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -10, smarts: -10, stress: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 300, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Relied on heavy chemical sleep aids to suppress midnight anxieties.`);
+        }
+      },
+      {
+        choiceText: 'Accept the mid-night wakefulness, sitting by a candle to read classical Stoic philosophy.',
+        outcomeText: 'Marcus Aurelius provides deep comfort to your mature mind. You gain serene mental strength in the quiet hours.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 25, stress: -15, happiness: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Utilized midnight watch hours to study classical Stoic philosophy.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_ancestral_archive',
+    title: 'The Bloodline Chronicles 📑',
+    description: 'A box of highly fragile, faded sepia photograph folders arrives from an aunt. You feel a sudden, deep pull to chart your family\'s historical genealogy.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60;
+    },
+    choices: [
+      {
+        choiceText: 'Pay two thousand dollars for international record digital scans and advanced genomic heritage kits.',
+        outcomeText: 'You trace your bloodline back to an ancient carpentry guild in rural Bavaria. The completed chart is a magnificent work of history.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 15, happiness: 15, stress: -10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 2000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Chartered your complete ancestral genealogy tree back through European guilds.`);
+        }
+      },
+      {
+        choiceText: 'Interview your oldest living relatives, recording their voices and archiving their personal memories on tape.',
+        outcomeText: 'Their shaky voices recount details of historic city fires and childhood songs. You preserve a priceless legacy of human memory.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: 30, happiness: 25, stress: -15 });
+          state.log.push(`Age ${state.characterInfo.age}: Digitally voice-archived the oral histories of elder family relatives.`);
+        }
+      },
+      {
+        choiceText: 'Let the dusty past rest, discarding the moldy folders to focus entirely on tomorrow.',
+        outcomeText: 'You drop the box into physical trash chutes. The ancient names fade into final oblivion, but you save storage space.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: -20, smarts: -5, happiness: 5 });
+          state.log.push(`Age ${state.characterInfo.age}: Cleared old family photographic catalogs to keep homestead space empty.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_antarctic_cruise',
+    title: 'The Frozen Fjord Cruise 🚢',
+    description: 'An elite maritime tourism association mails you an invitation for a highly exclusive, thirty-day voyage to the dramatic blue glaciers of Antarctica.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60 && state.finances.cashBalance >= 15000;
+    },
+    choices: [
+      {
+        choiceText: 'Purchase the premium cabin package for fifteen thousand dollars, packing your finest woolen gear.',
+        outcomeText: 'You sip hot coffee on the wooden deck while ancient indigo icebergs drift past. It is a majestic, jaw-dropping voyage of contemplation.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 35, stress: -30, smarts: 15 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 15000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Completed a luxury maritime expedition to the blue glaciers of Antarctica.`);
+        }
+      },
+      {
+        choiceText: 'Skip the expensive tour to invest those funds in low-yield municipal treasury bonds.',
+        outcomeText: 'You avoid any sea-sickness risks. Your ledger balance grows slowly, though you sigh when looking at winter postcards.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 12, stress: -5 });
+          state.finances.cashBalance += 1000;
+          state.log.push(`Age ${state.characterInfo.age}: Deffered leisure cruises, buying safe municipal tax-free bond sheets instead.`);
+        }
+      },
+      {
+        choiceText: 'Plan an independent, self-guided cold-weather hiking loop through raw Alaskan national parks.',
+        outcomeText: 'You carry a heavy canvas backpack and camp on raw mountain soils. It is demanding, but your physical cardio thrives.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 25, happiness: 20, stress: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 3000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Completed a self-sufficient wilderness mountain backpack trek in Alaska.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_rebuild_classic_engine',
+    title: 'The Iron Rebuild 🚙',
+    description: 'Your older vehicle\'s mechanical cylinder heads begin to leak black oil. Passing municipal clean-air compliance demands a full engine block tear-down.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const ownsVehicle = state.assets.some(a => a.type === 'vehicle');
+      return age >= 54 && age <= 60 && ownsVehicle;
+    },
+    choices: [
+      {
+        choiceText: 'Pay four thousand dollars to have an authorized vintage dealership rebuild the aluminum chambers.',
+        outcomeText: 'The car runs with an elegant, silent hum, perfectly compliant. You save time, though the fee was steep.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -15, happiness: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 4000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Paid vintage mechanical shops to execute a full engine compartment rebuild.`);
+        }
+      },
+      {
+        choiceText: 'Gift the car to a local vocational trade school training program, buying a silent electric vehicle.',
+        outcomeText: 'The teenagers are thrilled to get hands-on training. You transition to silent, modern electric transit and enjoy massive tax credits.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: 25, stress: -10, smarts: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 15000, -500000); // Cost of EV purchase
+          state.assets = state.assets.filter(a => a.type !== 'vehicle');
+          state.assets.push({
+            id: `asset_ev_${Date.now()}`,
+            name: 'Electric Commuter',
+            type: 'vehicle',
+            purchasePrice: 20000,
+            currentValue: 18000,
+            annualUpkeep: 400,
+            isFinanced: false,
+            loanDetails: null,
+            category: 'Commuter',
+            condition: 100
+          });
+          state.log.push(`Age ${state.characterInfo.age}: Donated old auto to trade schools, transitioning to electric commuter vehicle.`);
+        }
+      },
+      {
+        choiceText: 'Tear down the massive fuel system blocks yourself in your garage using physical shop manual books.',
+        outcomeText: 'You spend four weekends covered in jet-black grease. Ultimately, you calibrate the pistons perfectly! Your pride is astronomical.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -10, smarts: 25, happiness: 25, stress: 15 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 800, -500000); // Tooling cost
+          state.log.push(`Age ${state.characterInfo.age}: Completed manual mechanics engine restoration in your home workshop.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_heritage_play_save',
+    title: 'The Playground Battle 🏛️',
+    description: 'An aggressive developer group submits a bid to demolish the historic neighborhood playground where your children played, aiming to erect concrete commercial blocks.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60;
+    },
+    choices: [
+      {
+        choiceText: 'Mobilize a neighborhood historic preservation society, presenting legal land deeds at city hall.',
+        outcomeText: 'A spectacular civic victory! The municipal chamber declares the park a legal heritage landscape. Neighbors toast you with warm cider.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 15, stress: 15, karma: 30, happiness: 25 });
+          state.log.push(`Age ${state.characterInfo.age}: Spearheaded municipal landmark preservation to protect the community playground.`);
+        }
+      },
+      {
+        choiceText: 'Decline to intervene, accepting that urban core density must progress to resolve housing shortages.',
+        outcomeText: 'You watch the old wooden slides get crushed by heavy excavators. The new modern tower blocks rise rapidly.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 10, stress: -10, karma: -10 });
+          state.log.push(`Age ${state.characterInfo.age}: Remained passive during municipal redevelopment audits, letting old parks close.`);
+        }
+      },
+      {
+        choiceText: 'Sponsor a five-thousand-dollar political campaign to elect a council candidate who advocates for green zones.',
+        outcomeText: 'Your backed candidate wins! They halt regional commercial rezoning. The playground is saved by financial leverage.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -10, karma: 20, happiness: 15 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 5000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Financed civic election files to guarantee regional green zone parameters.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_silver_anniversary',
+    title: 'The Silver Thread 💍',
+    description: 'You and [Partner] arrive at your Silver 25th Wedding Anniversary. The milestone is a beautiful testament to a quarter-century of joint negotiation.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const isMarried = state.maritalStatus === 'Married';
+      const isPartnerAlive = state.relationships.some(r => r.relationshipType === 'Partner' && !r.isDead);
+      return age >= 54 && age <= 60 && isMarried && isPartnerAlive;
+    },
+    choices: [
+      {
+        choiceText: 'Host a grand, formal dinner gala for fifty close friends to publicly renew your marital vows.',
+        outcomeText: 'You Toast under glittering chandeliers. The family weeps at your beautiful legacy of love, though the event drain cash.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 35, looks: 12, stress: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 6000, -500000);
+          const partner = state.relationships.find(r => r.relationshipType === 'Partner' && !r.isDead);
+          if (partner) partner.relationshipValue = 100;
+          state.log.push(`Age ${state.characterInfo.age}: Hosted a grand celebration to renew your wedding vows after 25 years.`);
+        }
+      },
+      {
+        choiceText: 'Plan an off-grid mountain cabin retreat with zero electronics to walk and read in peace.',
+        outcomeText: 'You spend days chopping dry cedar wood, cooking basic meals on stoves, and sharing quiet, deep thoughts. Perfectly healing.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 15, stress: -30, happiness: 25 });
+          const partner = state.relationships.find(r => r.relationshipType === 'Partner' && !r.isDead);
+          if (partner) partner.relationshipValue = 100;
+          state.log.push(`Age ${state.characterInfo.age}: Celebrated wedding silver milestone inside an electronic-free mountain sanctuary.`);
+        }
+      },
+      {
+        choiceText: 'Give them a premium, custom-engraved piece of physical platinum jewelry costing five thousand dollars.',
+        outcomeText: 'Their eyes widen as they unlock the velvet package. The metal carries beautiful coordinate markings of your wedding spot.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { looks: 15, happiness: 20 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 5000, -500000);
+          state.assets.push({
+            id: `asset_platinum_${Date.now()}`,
+            name: 'Platinum Coordinate Ring',
+            type: 'other',
+            purchasePrice: 5000,
+            currentValue: 4500,
+            annualUpkeep: 0,
+            isFinanced: false,
+            loanDetails: null,
+            subtype: 'Ring',
+            condition: 100
+          });
+          const partner = state.relationships.find(r => r.relationshipType === 'Partner' && !r.isDead);
+          if (partner) partner.relationshipValue = Math.min(100, partner.relationshipValue + 15);
+          state.log.push(`Age ${state.characterInfo.age}: Gifted [Partner] custom coordinate platinum jewelry for your Silver anniversary.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_biological_menopause',
+    title: 'The Hormonal Solstice 🍂',
+    description: 'The body shifts. You encounter regular patterns of extreme midnight warmth, metabolic slowdown, and general physiological exhaustion as your body traverses its natural hormonal transition.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60;
+    },
+    choices: [
+      {
+        choiceText: 'Adopt a holistic endocrinology regimen of natural mineral supplements, cold showers, and weight lifting.',
+        outcomeText: 'Your body builds fresh, firm muscle mass! The hot flashes subside, and you carry magnificent stamina.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 20, looks: 8, stress: -15, happiness: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Balanced mature hormone shifts using systematic weight training and organic diets.`);
+        }
+      },
+      {
+        choiceText: 'Enroll in advanced clinical hormone replacement therapy (HRT) under top specialist care.',
+        outcomeText: 'Your sleep cycle stabilizes almost immediately and your mind feels razor-sharp, with minor medical maintenance fees.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 15, stress: -10, happiness: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 1200, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Balanced the mature physical transition using specialist-supervised hormone therapy (-$1,200).`);
+        }
+      },
+      {
+        choiceText: 'Accept the shifts with zero intervention, managing the periodic exhaustion by sleeping long afternoon hours.',
+        outcomeText: 'You nap frequently, which slows down your creative output, but you save money and live peacefully are your own speed.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: 5, stress: -10, smarts: -5 });
+          state.log.push(`Age ${state.characterInfo.age}: Accepted structural and metabolic shifts as natural patterns of maturity.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_mentor_struggling_associate',
+    title: 'The Socratic Shadow 🎓',
+    description: 'A quiet, struggling junior colleague approaches you in the breakroom. They are overwhelmed by the firm\'s demanding workflows and ask if you would act as their formal career mentor.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const isEmployed = state.characterInfo.currentOccupation !== 'Unemployed' && state.characterInfo.currentOccupation !== 'Retired';
+      return age >= 54 && age <= 60 && isEmployed;
+    },
+    choices: [
+      {
+        choiceText: 'Dedicate two hours weekly of patient strategic mentorship, teaching them how to navigate high-stakes files.',
+        outcomeText: 'A year later, they excel brilliantly, publically thanking you during the firm\'s annual review gala.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: 30, smarts: 15, stress: 5, happiness: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Dedicated weekly office hours to mentor and protect a vulnerable junior peer.`);
+        }
+      },
+      {
+        choiceText: 'Decline their requests, explaining that your current executive slate of work consumes your entire schedule.',
+        outcomeText: 'They nod sadly and walk away. They are demoted six months later, though your own weekly workload remains uncluttered.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: -20, stress: -10, happiness: 5 });
+          state.log.push(`Age ${state.characterInfo.age}: Prioritized private boardroom hours over junior staff developmental assistance.`);
+        }
+      },
+      {
+        choiceText: 'Gift them an expensive copy of your favorite corporate leadership manual, offering general hands-off advice.',
+        outcomeText: 'They read the book and appreciate the gesture, though they struggle to translate the textbook words to actual systems.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: 10 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 40, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Provided static leadership books and brief career pointers to a struggling coworker.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_regulatory_ledger_audit',
+    title: 'The Ledger Inquisition 📋',
+    description: 'The municipal tax department flags your historic real estate asset valuations. They issue a formal notice demanding a complete forensic ledger audit of your portfolio.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      const hasAssets = state.assets.length > 0;
+      return age >= 54 && age <= 60 && hasAssets;
+    },
+    choices: [
+      {
+        choiceText: 'Hire an elite private tax attorney to represent your asset folders for three thousand dollars cash.',
+        outcomeText: 'Your attorney files immaculate legal countermotions. The audit closes within weeks, confirming your perfect record.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -20, smarts: 10, happiness: 5 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 3000, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Employed elite legal counsel to resolve municipal tax ledger audits (-$3,000).`);
+        }
+      },
+      {
+        choiceText: 'Compile the endless shoeboxes of physical receipts yourself, spending sixty hours auditing files.',
+        outcomeText: 'A grueling, mind-numbing effort of tracking numbers. You find every single dollar, though you suffer terrible eye strain.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { health: -10, smarts: 20, stress: 25 });
+          state.log.push(`Age ${state.characterInfo.age}: Executed tedious, self-guided forensic tax audit files to guard wealth assets.`);
+        }
+      },
+      {
+        choiceText: 'Bribe a junior regulatory auditor with a luxurious five-hundred-dollar rare wine crate.',
+        outcomeText: 'The junior auditor accepts the crate with a quiet wink. Your audit is deleted, but you always look over your shoulder.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { karma: -40, stress: 30, smarts: 5 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 500, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Manipulated regulatory audit staff using high-end black-market gifts.`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_short_term_memory_slip',
+    title: 'The Staring Cabinets 🧠',
+    description: 'You march into the kitchen with complete determination, only to freeze there staring at the wooden cabinets, completely unable to remember what you wanted.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60;
+    },
+    choices: [
+      {
+        choiceText: 'Start a daily routine of brain-training puzzles, wild berry diets, and detailed memory logs.',
+        outcomeText: 'The mental exercises are fun! You start recalling complex card decks and phone records with razor-sharp speed.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 25, health: 12, stress: -5, happiness: 15 });
+          state.log.push(`Age ${state.characterInfo.age}: Combated cognitive aging with daily neurochemical brain puzzles and berry diets.`);
+        }
+      },
+      {
+        choiceText: 'Shrug it off as basic mechanical age wear-and-tear, refusing to let memory paranoia dictate your day.',
+        outcomeText: 'You walk back to the couch. Ten minutes later, you remember you wanted a glass of water. Natural and peaceful.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -15, happiness: 10 });
+          state.log.push(`Age ${state.characterInfo.age}: Ignored minor memory lapses, choosing to accept organic mental patterns.`);
+        }
+      },
+      {
+        choiceText: 'Consult an expensive private neurologist to execute comprehensive neurocognitive baseline scans.',
+        outcomeText: 'The clinical result shows perfect baseline values for your age. You enjoy immense peace of mind, despite the high clinical fee.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { stress: -25, smarts: 10, happiness: 15 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 2500, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Confirmed neural structural baseline health using advanced medical MRI scans (-$2,500).`);
+        }
+      }
+    ]
+  },
+  {
+    id: 'mat_reunion_reminisce_fire',
+    title: 'The Fireside Nostalgia 🔥',
+    description: 'A lifelong childhood friend calls out of the blue. They want to rent a small lake house cabin for a weekend of fishing and nostalgic beers.',
+    category: 'Adulthood',
+    condition: (state: CharacterState) => {
+      const age = state.characterInfo?.age;
+      return age >= 54 && age <= 60;
+    },
+    choices: [
+      {
+        choiceText: 'Book the trip immediately, spending the weekend laughing about your old teenage school yard pranks.',
+        outcomeText: 'You sit under stunning starry skies by wood fires. You feel a massive emotional recharge, realizing true friendship transcends time.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { happiness: 30, stress: -25, karma: 15 });
+          state.finances.cashBalance = Math.max(state.finances.cashBalance - 500, -500000);
+          state.log.push(`Age ${state.characterInfo.age}: Reunited with a childhood companion for a restorative fireside retreat.`);
+        }
+      },
+      {
+        choiceText: 'Decline, explaining that your current asset portfolios and estate operations require your full presence.',
+        outcomeText: 'Your friend sounds slightly disappointed but wishes you well. You spend the weekend reviewing spreadsheets.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { smarts: 10, stress: 10, happiness: -5 });
+          state.log.push(`Age ${state.characterInfo.age}: Prioritized weekend financial reviews over childhood friend reunions.`);
+        }
+      },
+      {
+        choiceText: 'Invite them to visit your grand estate instead to show off your high wealth and collection portfolios.',
+        outcomeText: 'They admire your high-end dining set and clean lawns, but the conversation feels slightly stiff and competitive.',
+        effect: (state: CharacterState) => {
+          adjustStats(state, { looks: 10, stress: 5, happiness: 5, karma: -10 });
+          state.log.push(`Age ${state.characterInfo.age}: Hosted a childhood friend to showcase your mature financial achievements.`);
+        }
+      }
+    ]
+  }
 ];
