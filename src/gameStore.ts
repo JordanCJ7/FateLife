@@ -1065,14 +1065,34 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         nextStats.looks = clamp(nextStats.looks - looksLoss, 0, 100);
         nextLog.push(`Age ${nextAge}: Elder aging takes a toll. Health (-${Math.round(healthLoss)}%) and Looks (-${Math.round(looksLoss)}%) decayed.`);
       } else {
-        // Deep geriatric decay: -3.5% compounded annually
+        // Strict baseline geriatric wear-and-tear past age 75
+        let decayRate = 0.025; // 2.5% base past 75
+        
+        if (nextAge >= 80) {
+          // Automatic progressive compounding decay past age 80 (scaling from 2.5% to 5.0%+)
+          decayRate = Math.min(0.055, 0.025 + (nextAge - 80) * 0.002);
+        }
+
+        // Adjust decayRate downwards slightly if the character possesses luxury assets or premium wellness traits
+        const hasLuxuryAssets = assets.some(a => a.type === 'real_estate' && a.currentValue >= 500000);
+        const hasWellnessTraits = (nextStats.happiness > 80 && nextStats.stress < 30) || (consistencyStreaks?.gymStreak ?? 0) >= 3;
+        
+        if (hasLuxuryAssets) {
+          decayRate = Math.max(0.015, decayRate - 0.005);
+        }
+        if (hasWellnessTraits) {
+          decayRate = Math.max(0.015, decayRate - 0.005);
+        }
+
         const oldHealth = nextStats.health;
         const oldLooks = nextStats.looks;
-        nextStats.health = clamp(nextStats.health * (1.0 - 0.035), 0, 100);
-        nextStats.looks = clamp(nextStats.looks * (1.0 - 0.035), 0, 100);
+        
+        nextStats.health = clamp(nextStats.health * (1.0 - decayRate), 0, 100);
+        nextStats.looks = clamp(nextStats.looks * (1.0 - decayRate), 0, 100);
+        
         const healthLoss = oldHealth - nextStats.health;
         const looksLoss = oldLooks - nextStats.looks;
-        nextLog.push(`Age ${nextAge}: Deep geriatric decay compounds. Health decayed (-${Math.round(healthLoss)}%) and Looks decayed (-${Math.round(looksLoss)}%).`);
+        nextLog.push(`Age ${nextAge}: Deep geriatric decay compounds at ${(decayRate * 100).toFixed(1)}%. Health decayed (-${Math.round(healthLoss)}%) and Looks decayed (-${Math.round(looksLoss)}%).`);
       }
     }
 
@@ -3792,3 +3812,164 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     get().initializeCharacter();
   },
 }));
+
+export function runEconomySimulation(iterations: number, years: number) {
+  let totalEndCash = 0;
+  let totalMaxDebt = 0;
+  let totalBankruptcies = 0;
+  let totalDeaths = 0;
+  let survivalYearsSum = 0;
+  let totalEndHealth = 0;
+  let totalEndHappiness = 0;
+
+  for (let i = 0; i < iterations; i++) {
+    // Initializing standard headless simulation character
+    let simAge = 18;
+    const simStats: Stats = {
+      happiness: 80,
+      health: 80,
+      smarts: 70,
+      looks: 60,
+      karma: 50,
+      stress: 15
+    };
+    const simFinances: Finances = {
+      cashBalance: 10000, // starting graduate funds
+      annualSalary: 45000, // standard apprentice plumber or junior role
+      annualDebt: 0
+    };
+    const simAssets: Asset[] = [];
+    
+    let isDead = false;
+    let maxDebt = 0;
+    let costOfLiving = 25000; // base CoL in USD
+    
+    // Mortgage setup at age 28
+    let hasMortgage = false;
+    let mortgagePayment = 0;
+
+    for (let yr = 0; yr < years; yr++) {
+      if (isDead) break;
+      
+      simAge += 1;
+      survivalYearsSum += 1;
+
+      // 1. Career/Salary Trajectory: 3.5% yearly increase with promotions/inflation
+      simFinances.annualSalary = Math.round(simFinances.annualSalary * 1.035);
+
+      // Cost of living adjusts by 2.5% inflation rate
+      costOfLiving = Math.round(costOfLiving * 1.025);
+
+      // Income tax (flat 18%)
+      const taxes = Math.round(simFinances.annualSalary * 0.18);
+
+      // 2. Variable mortgage payments simulation:
+      // Character acquires a home at age 28 with 30-year mortgage
+      if (simAge === 28) {
+        hasMortgage = true;
+        // $350,000 house, $15,000 annual mortgage
+        mortgagePayment = 15000;
+        simAssets.push({
+          id: `sim-house-${i}`,
+          name: 'Comfortable House',
+          type: 'real_estate',
+          purchasePrice: 350000,
+          currentValue: 350000,
+          annualUpkeep: 3000,
+          isFinanced: true,
+          loanDetails: {
+            principalRemaining: 300000,
+            annualPayment: 15000,
+            yearsRemaining: 30
+          }
+        });
+      }
+
+      const mortgageCost = hasMortgage && (simAge - 28 <= 30) ? mortgagePayment : 0;
+      const upkeepCost = simAssets.reduce((sum, a) => sum + a.annualUpkeep, 0);
+
+      // 3. Unexpected Asset Shock Deducts (15% annual chance of a major bill, e.g., health or house emergency)
+      let assetShock = 0;
+      if (Math.random() < 0.15) {
+        assetShock = Math.floor(Math.random() * 5000) + 1000; // $1,000 to $6,000
+      }
+
+      // Net cash flow
+      const netCashFlow = simFinances.annualSalary - costOfLiving - taxes - mortgageCost - upkeepCost - assetShock;
+      simFinances.cashBalance += netCashFlow;
+
+      if (simFinances.cashBalance < 0) {
+        const debt = Math.abs(simFinances.cashBalance);
+        if (debt > maxDebt) maxDebt = debt;
+      }
+
+      // 4. Stress and Health Interaction
+      let stressDiff = -5; // base relief
+      if (simFinances.cashBalance < 0) {
+        stressDiff += 15; // stress from debt
+      }
+      if (hasMortgage && (simAge - 28 <= 30)) {
+        stressDiff += 5; // mortgage stress
+      }
+      simStats.stress = Math.max(0, Math.min(100, simStats.stress + stressDiff));
+
+      // 5. Late Senior Health Decay Scaling past 75
+      if (simAge <= 75) {
+        // Flat decay
+        simStats.health = Math.max(0, Math.min(100, simStats.health - 1));
+        simStats.looks = Math.max(0, Math.min(100, simStats.looks - 1.5));
+      } else {
+        // Automatic progressive decay past age 80
+        let decayRate = 0.025;
+        if (simAge >= 80) {
+          decayRate = Math.min(0.055, 0.025 + (simAge - 80) * 0.002);
+        }
+
+        // Downward adjustments
+        const hasLuxury = simAssets.some(a => a.type === 'real_estate' && a.currentValue >= 500000);
+        const hasWellness = simStats.happiness > 80 && simStats.stress < 30;
+        if (hasLuxury) decayRate = Math.max(0.015, decayRate - 0.005);
+        if (hasWellness) decayRate = Math.max(0.015, decayRate - 0.005);
+
+        simStats.health = Math.max(0, Math.min(100, simStats.health * (1.0 - decayRate)));
+        simStats.looks = Math.max(0, Math.min(100, simStats.looks * (1.0 - decayRate)));
+      }
+
+      // 6. Mortality check
+      let simDeathProb = 0;
+      if (simStats.health <= 0) {
+        simDeathProb = 1.0;
+      } else if (simAge > 70) {
+        simDeathProb = (simAge - 70) * 0.022 + (1.0 - simStats.health / 100) * 0.1;
+      }
+
+      if (Math.random() < simDeathProb || simAge >= 115) {
+        isDead = true;
+        totalDeaths += 1;
+      }
+    }
+
+    if (simFinances.cashBalance < 0) {
+      totalBankruptcies += 1;
+    }
+    totalEndCash += simFinances.cashBalance;
+    totalMaxDebt += maxDebt;
+    totalEndHealth += simStats.health;
+    totalEndHappiness += simStats.happiness;
+  }
+
+  const report = {
+    iterations,
+    yearsSimulatedPerIteration: years,
+    averageSurvivalAge: 18 + (survivalYearsSum / iterations),
+    averageFinalCashBalance: totalEndCash / iterations,
+    averageMaxDebtReached: totalMaxDebt / iterations,
+    bankruptcyRatePercent: (totalBankruptcies / iterations) * 100,
+    deathRatePercent: (totalDeaths / iterations) * 100,
+    averageFinalHealth: totalEndHealth / iterations,
+    averageFinalHappiness: totalEndHappiness / iterations
+  };
+
+  console.log(`[ECONOMY SIMULATION REPORT]`, report);
+  return report;
+}
