@@ -14,6 +14,7 @@ export default function EventModal() {
   const characterInfo = useGameStore((state) => state.characterInfo);
   const activeEventQueue = useGameStore((state) => state.activeEventQueue || []);
   const finances = useGameStore((state) => state.finances);
+  const isLightMode = useGameStore((state) => state.isLightMode);
 
   if (!currentEvent || !characterInfo) return null;
 
@@ -30,12 +31,12 @@ export default function EventModal() {
   return (
     <div 
       id="event_modal_overlay" 
-      className="absolute inset-0 bg-slate-950/85 backdrop-blur-xs flex flex-col justify-end z-50 animate-fade-in"
+      className={`absolute inset-0 ${isLightMode ? 'bg-slate-900/40' : 'bg-slate-950/85'} backdrop-blur-xs flex flex-col justify-end z-50 animate-fade-in`}
     >
       <div 
-        className="w-full max-h-[65%] bg-[#121826] border-t border-slate-800/80 rounded-t-[32px] p-5 shadow-2xl flex flex-col gap-4 relative overflow-y-auto animate-slide-up"
+        className={`w-full max-h-[65%] ${isLightMode ? 'bg-white border-t border-slate-200 text-slate-800' : 'bg-[#111827] border-t border-slate-800/80 text-white'} rounded-t-[32px] p-5 shadow-2xl flex flex-col gap-4 relative overflow-y-auto animate-slide-up`}
         style={{ 
-          boxShadow: '0 -10px 40px -10px rgba(0, 0, 0, 0.8)'
+          boxShadow: isLightMode ? '0 -8px 30px rgba(0, 0, 0, 0.08)' : '0 -10px 40px -10px rgba(0, 0, 0, 0.8)'
         }}
       >
         {/* Decorative corner glow */}
@@ -44,45 +45,25 @@ export default function EventModal() {
         {/* Category badge */}
         <div className="flex flex-wrap justify-between items-center gap-2">
           <span 
-            className="text-[10px] uppercase border px-3 py-1 rounded-full tracking-widest font-semibold flex items-center gap-1.5"
-            style={{ 
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-              backgroundColor: '#090D16',
-              borderColor: '#1E293B',
-              color: '#2DD4BF'
-            }}
+            className={`text-[10px] uppercase border px-3 py-1 rounded-full tracking-widest font-black flex items-center gap-1.5 font-mono ${isLightMode ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#090D16] border-[#1E293B] text-[#2DD4BF]'}`}
           >
             <Calendar className="w-3.5 h-3.5" />
             {currentEvent.category} Stage Event
           </span>
           <div 
-            className="text-xs flex items-center gap-2 font-mono"
-            style={{ 
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-              color: '#94A3B8'
-            }}
+            className={`text-xs flex items-center gap-2 font-mono ${isLightMode ? 'text-slate-500' : 'text-[#94A3B8]'}`}
           >
-            <span>Age: <span className="font-bold text-slate-200">{characterInfo.age}</span></span>
+            <span>Age: <span className={`font-bold ${isLightMode ? 'text-slate-800' : 'text-slate-200'}`}>{characterInfo.age}</span></span>
             {finances && (
               <span 
-                className="font-bold border px-2 py-0.5 rounded"
-                style={{ 
-                  backgroundColor: '#090D16',
-                  borderColor: '#059669',
-                  color: '#10B981'
-                }}
+                className={`font-bold border px-2 py-0.5 rounded ${isLightMode ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#090D16] border-emerald-600 text-[#10B981]'}`}
               >
                 {formatCurrency(finances.cashBalance)}
               </span>
             )}
             {activeEventQueue.length > 0 && (
               <span 
-                className="border px-2 py-0.5 rounded text-[10px] font-extrabold tracking-wide uppercase"
-                style={{ 
-                  backgroundColor: '#064E3B',
-                  borderColor: '#065F46',
-                  color: '#34D399'
-                }}
+                className="border px-2 py-0.5 rounded text-[10px] font-extrabold tracking-wide uppercase bg-emerald-600/10 border-emerald-500 text-emerald-600"
               >
                 +{activeEventQueue.length} Queued
               </span>
@@ -93,22 +74,12 @@ export default function EventModal() {
         {/* content */}
         <div className="flex flex-col gap-2">
           <h2 
-            className="text-base font-extrabold tracking-wide flex items-center gap-2"
-            style={{ 
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-              color: '#F8FAFC'
-            }}
+            className={`text-sm sm:text-base font-extrabold tracking-wide flex items-center gap-2 font-sans ${isLightMode ? 'text-slate-950' : 'text-slate-100'}`}
           >
-            <HelpCircle className="w-4.5 h-4.5 text-teal-400" /> {currentEvent.title}
+            <HelpCircle className={`w-4.5 h-4.5 ${isLightMode ? 'text-green-600' : 'text-teal-400'}`} /> {currentEvent.title}
           </h2>
           <p 
-            className="text-xs sm:text-sm leading-relaxed p-4 rounded-2xl border"
-            style={{ 
-              fontFamily: "'Inter', system-ui, sans-serif",
-              color: '#E2E8F0',
-              backgroundColor: '#090D16',
-              borderColor: '#1E293B'
-            }}
+            className={`text-xs sm:text-sm leading-relaxed p-4 rounded-2xl border font-medium ${isLightMode ? 'bg-slate-50 border-slate-150 text-slate-700' : 'bg-[#090D16] border-slate-850 text-slate-300'}`}
           >
             {currentEvent.description}
           </p>
@@ -117,10 +88,9 @@ export default function EventModal() {
         {/* Choices buttons */}
         <div className="flex flex-col gap-2.5">
           <p 
-            className="text-[10px] uppercase tracking-widest font-bold"
+            className={`text-[10px] uppercase tracking-widest font-bold ${isLightMode ? 'text-slate-400' : 'text-[#64748B]'}`}
             style={{ 
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-              color: '#64748B'
+              fontFamily: "'JetBrains Mono', 'Fira Code', monospace"
             }}
           >
             What will you do?
@@ -129,17 +99,17 @@ export default function EventModal() {
             <button
               key={idx}
               onClick={() => executeChoice(currentEvent.id, idx)}
-              className="group w-full text-left py-4 px-5 rounded-2xl bg-[#090D16] border border-slate-800 hover:border-slate-700 transition duration-200 flex justify-between items-center gap-4 cursor-pointer outline-none focus:ring-2 focus:ring-teal-500"
+              className={`group w-full text-left py-4 px-5 rounded-2xl border transition duration-200 flex justify-between items-center gap-4 cursor-pointer outline-none focus:ring-2 focus:ring-green-500 ${isLightMode ? 'bg-slate-50 border-slate-200 hover:bg-slate-150/50 text-slate-800' : 'bg-[#090D16] border-slate-850 hover:border-slate-750 text-slate-100'}`}
               style={{
                 fontFamily: "'Inter', system-ui, sans-serif"
               }}
             >
               <span 
-                className="text-xs sm:text-sm font-semibold transition text-slate-100 group-hover:text-white"
+                className={`text-xs sm:text-sm font-black transition ${isLightMode ? 'text-slate-800 group-hover:text-slate-950' : 'text-slate-200 group-hover:text-white'}`}
               >
                 {cleanChoiceText(choice.choiceText)}
               </span>
-              <ArrowRightCircle className="w-5 h-5 text-teal-500 group-hover:text-teal-400 group-hover:translate-x-1.5 transition-all duration-300 flex-shrink-0" />
+              <ArrowRightCircle className={`w-5 h-5 ${isLightMode ? 'text-green-600' : 'text-teal-500'} group-hover:translate-x-1.5 transition-all duration-300 flex-shrink-0`} />
             </button>
           ))}
         </div>

@@ -60,6 +60,8 @@ export default function App() {
   const currentEvent = useGameStore((state) => state.currentEvent);
   const activeEventQueue = useGameStore((state) => state.activeEventQueue || []);
   const lastChoiceOutcome = useGameStore((state) => state.lastChoiceOutcome);
+  const isLightMode = useGameStore((state) => state.isLightMode);
+  const toggleTheme = useGameStore((state) => state.toggleTheme);
 
   // Character creator fields state
   const [firstName, setFirstName] = useState('');
@@ -334,65 +336,77 @@ export default function App() {
   // If character is not initialized, render the Character Creator landing card in the portrait container
   if (!characterInfo) {
     return (
-      <main className="min-h-screen w-full bg-[#05070c] text-slate-100 flex items-center justify-center select-none font-sans p-0 sm:p-4 animate-fade-in">
-        <div id="welcome_setup_card" className="max-w-[440px] w-full min-h-screen sm:min-h-0 sm:h-[840px] sm:max-h-[92vh] sm:rounded-[36px] sm:border sm:border-slate-800/80 bg-[#090D16] shadow-2xl relative overflow-y-auto flex flex-col p-6 scrollbar-none">
+      <main className={`min-h-screen w-full ${isLightMode ? 'bg-[#F1F5F9]' : 'bg-[#0B0F19]'} transition-colors duration-300 flex items-center justify-center select-none font-sans p-0 sm:p-4 animate-fade-in`}>
+        <div id="welcome_setup_card" className={`max-w-[440px] w-full min-h-screen sm:min-h-0 sm:h-[840px] sm:max-h-[92vh] sm:rounded-[36px] sm:border ${isLightMode ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#111827] border-slate-800/80 text-slate-100'} shadow-2xl relative overflow-y-auto flex flex-col p-6 scrollbar-none`}>
+          {/* Theme Toggle Button */}
+          <div className="absolute top-5 right-5 z-20">
+            <button 
+              type="button"
+              onClick={toggleTheme} 
+              className={`p-2.5 rounded-full border transition-all duration-200 cursor-pointer active:scale-95 ${isLightMode ? 'bg-slate-50 border-slate-200 text-amber-500 shadow-sm hover:bg-slate-100' : 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700'}`}
+              title="Toggle Theme"
+            >
+              {isLightMode ? '☀️' : '🌙'}
+            </button>
+          </div>
+
           {/* Decorative glows */}
           <div className="absolute top-0 left-0 w-44 h-44 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-44 h-44 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
           {/* Heading */}
           <div className="text-center space-y-2 mt-4">
-            <div className="inline-flex items-center gap-1 bg-[#121826] text-teal-400 font-mono text-[9px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-full border border-slate-800 shadow-sm">
-              <Sparkles className="w-3 h-3 text-teal-400 animate-spin" style={{ animationDuration: '6s' }} />
+            <div className={`inline-flex items-center gap-1.5 ${isLightMode ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-[#121826] text-teal-400 border-slate-800'} font-mono text-[9px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-full border shadow-sm`}>
+              <Sparkles className="w-3 h-3 text-teal-500 animate-spin" style={{ animationDuration: '6s' }} />
               FateLife Engine v1.0.0
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1">
-              FATE<span className="text-teal-400">LIFE</span>
+            <h1 className={`text-3xl font-black tracking-tight ${isLightMode ? 'text-slate-950' : 'text-white'} mt-1`}>
+              FATE<span className={isLightMode ? 'text-green-600' : 'text-teal-400'}>LIFE</span>
             </h1>
-            <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+            <p className={`text-xs ${isLightMode ? 'text-slate-500' : 'text-slate-400'} max-w-xs mx-auto leading-relaxed font-medium`}>
               Experience a mobile-first, deterministic life simulation. Drive careers, study hard, buy real estate, gamble, adapt to events, and survive the test of time!
             </p>
           </div>
 
           {/* Setup Form */}
-          <form onSubmit={handleConceive} className="space-y-4 pt-4 border-t border-slate-800/80 mt-4 flex-1 flex flex-col justify-between">
+          <form onSubmit={handleConceive} className={`space-y-4 pt-4 border-t ${isLightMode ? 'border-slate-100' : 'border-slate-800/80'} mt-4 flex-1 flex flex-col justify-between`}>
             <div className="space-y-4">
-              <h2 className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Conceive New Character</h2>
+              <h2 className={`text-xs sm:text-sm font-bold tracking-wide uppercase ${isLightMode ? 'text-slate-500' : 'text-slate-400'}`}>Conceive New Character</h2>
               
               <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">First Name</label>
+                  <label className={`block text-xs sm:text-sm font-bold uppercase ${isLightMode ? 'text-slate-600' : 'text-slate-400'} mb-1.5`}>First Name</label>
                   <input 
                     type="text" 
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Random Name"
-                    className="w-full bg-[#121826] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-sans shadow-inner placeholder-slate-600 transition"
+                    className={`w-full ${isLightMode ? 'bg-slate-50 border-slate-200 text-slate-800 focus:border-green-500' : 'bg-[#121826] border-slate-800 text-white focus:border-teal-500'} rounded-2xl px-5 py-3 text-sm focus:outline-none font-sans shadow-inner placeholder-slate-400 transition font-bold`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">Last Name</label>
+                  <label className={`block text-xs sm:text-sm font-bold uppercase ${isLightMode ? 'text-slate-600' : 'text-slate-400'} mb-1.5`}>Last Name</label>
                   <input 
                     type="text" 
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Random Surname"
-                    className="w-full bg-[#121826] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-sans shadow-inner placeholder-slate-600 transition"
+                    className={`w-full ${isLightMode ? 'bg-slate-50 border-slate-200 text-slate-800 focus:border-green-500' : 'bg-[#121826] border-slate-800 text-white focus:border-teal-500'} rounded-2xl px-5 py-3 text-sm focus:outline-none font-sans shadow-inner placeholder-slate-400 transition font-bold`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">Biological Gender</label>
+                  <label className={`block text-xs sm:text-sm font-bold uppercase ${isLightMode ? 'text-slate-600' : 'text-slate-400'} mb-1.5`}>Biological Gender</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setGender('Male')}
-                      className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all ${
+                      className={`py-3 px-4 text-sm font-bold rounded-2xl border transition-all cursor-pointer ${
                         gender === 'Male'
-                          ? 'bg-teal-950/40 border-teal-500 text-teal-300 shadow-sm'
-                          : 'bg-[#121826] border-slate-800 text-slate-400 hover:border-slate-700'
+                          ? isLightMode ? 'bg-green-100 border-green-500 text-green-700 shadow-sm' : 'bg-teal-950/40 border-teal-500 text-teal-300 shadow-sm'
+                          : isLightMode ? 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100' : 'bg-[#121826] border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
                       Male
@@ -400,10 +414,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setGender('Female')}
-                      className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all ${
+                      className={`py-3 px-4 text-sm font-bold rounded-2xl border transition-all cursor-pointer ${
                         gender === 'Female'
-                          ? 'bg-pink-950/20 border-pink-500 text-pink-300 shadow-sm'
-                          : 'bg-[#121826] border-slate-800 text-slate-400 hover:border-slate-700'
+                          ? isLightMode ? 'bg-pink-100 border-pink-400 text-pink-700 shadow-sm' : 'bg-pink-950/20 border-pink-500 text-pink-300 shadow-sm'
+                          : isLightMode ? 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100' : 'bg-[#121826] border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
                       Female
@@ -412,11 +426,11 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">Country of Birth</label>
+                  <label className={`block text-xs sm:text-sm font-bold uppercase ${isLightMode ? 'text-slate-600' : 'text-slate-400'} mb-1.5`}>Country of Birth</label>
                   <select
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full bg-[#121826] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-teal-500 font-sans cursor-pointer"
+                    className={`w-full ${isLightMode ? 'bg-slate-50 border-slate-200 text-slate-800 focus:border-green-500' : 'bg-[#121826] border-slate-800 text-slate-300 focus:border-teal-500'} rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none font-sans cursor-pointer`}
                   >
                     {COUNTRIES.map((c) => (
                       <option key={c} value={c}>{c}</option>
@@ -429,14 +443,14 @@ export default function App() {
             <div className="flex flex-col gap-2 pt-4 mt-auto">
               <button
                 type="submit"
-                className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all duration-200 transform shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
+                className={`w-full ${isLightMode ? 'bg-green-600 hover:bg-green-500 shadow-green-200' : 'bg-teal-600 hover:bg-teal-500 shadow-teal-950/20'} text-white font-black py-3.5 px-4 rounded-full text-sm transition-all duration-200 transform shadow-lg flex items-center justify-center gap-1.5 cursor-pointer`}
               >
                 <Baby className="w-4 h-4 text-white" /> Conceive Custom Character
               </button>
               <button
                 type="button"
                 onClick={handleQuickStart}
-                className="w-full bg-[#121826] hover:bg-slate-800 border border-slate-800 text-teal-400 font-bold py-2.5 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                className={`w-full ${isLightMode ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700' : 'bg-[#121826] hover:bg-slate-800 border-slate-800 text-teal-400'} font-bold py-3 px-4 rounded-full text-xs transition-all flex items-center justify-center gap-1 cursor-pointer`}
               >
                 Quick Start (Randomized Life)
               </button>
@@ -444,9 +458,9 @@ export default function App() {
           </form>
 
           {/* Footer warning */}
-          <div className="bg-[#121826] p-3 rounded-2xl border border-slate-800/85 text-center mt-4 mb-2">
-            <p className="text-[9px] text-slate-500 flex items-center justify-center gap-1">
-              <Scale className="w-3 h-3 text-slate-600" />
+          <div className={`p-3 rounded-2xl border text-center mt-4 mb-2 ${isLightMode ? 'bg-slate-50 border-slate-100 text-slate-500' : 'bg-[#121826] border-slate-800/85 text-slate-500'}`}>
+            <p className="text-[10px] flex items-center justify-center gap-1 font-bold font-mono">
+              <Scale className="w-3.5 h-3.5 text-slate-500" />
               Runs 100% locally on standard probability trees.
             </p>
           </div>
@@ -463,70 +477,83 @@ export default function App() {
   // Render Graveyard modal/screen if they passed away
   if (characterInfo.isDead) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div id="graveyard_setup_card" className="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden text-center">
+      <main className={`min-h-screen w-full ${isLightMode ? 'bg-[#F1F5F9]' : 'bg-[#0B0F19]'} transition-colors duration-300 flex items-center justify-center p-0 sm:p-4 select-none`}>
+        <div id="graveyard_setup_card" className={`max-w-[440px] w-full min-h-screen sm:min-h-0 sm:h-[840px] sm:max-h-[92vh] sm:rounded-[36px] sm:border ${isLightMode ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#111827] border-slate-800/80 text-slate-100'} shadow-2xl relative overflow-y-auto flex flex-col p-6 scrollbar-none justify-between text-center`}>
+          
+          {/* Theme Toggle Button */}
+          <div className="absolute top-5 right-5 z-20">
+            <button 
+              type="button"
+              onClick={toggleTheme} 
+              className={`p-2.5 rounded-full border transition-all duration-200 cursor-pointer active:scale-95 ${isLightMode ? 'bg-slate-50 border-slate-200 text-amber-500 shadow-sm hover:bg-slate-100' : 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700'}`}
+              title="Toggle Theme"
+            >
+              {isLightMode ? '☀️' : '🌙'}
+            </button>
+          </div>
+
           {/* Gravestone overlay glow */}
           <div className="absolute top-0 inset-x-0 h-40 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
 
           {/* Icon */}
-          <div className="w-16 h-16 bg-rose-950/20 border border-rose-500/30 text-rose-400 rounded-full flex items-center justify-center mx-auto animate-pulse">
+          <div className={`w-16 h-16 ${isLightMode ? 'bg-rose-50 border-rose-100 text-rose-600' : 'bg-rose-950/20 border-rose-500/30 text-rose-400'} border rounded-full flex items-center justify-center mx-auto animate-pulse mt-4`}>
             <Skull className="w-8 h-8 text-rose-500" />
           </div>
 
           {/* Epitaph */}
-          <div className="space-y-1">
-            <p className="text-[10px] font-mono tracking-widest text-slate-500 uppercase font-bold">In Loving Memory Of</p>
-            <h1 className="text-3xl font-extrabold text-white">
+          <div className="space-y-1 mt-2">
+            <p className={`text-xs font-bold tracking-widest uppercase ${isLightMode ? 'text-slate-400' : 'text-slate-500'}`}>In Loving Memory Of</p>
+            <h1 className={`text-3xl font-black ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
               {characterInfo.firstName} {characterInfo.lastName}
             </h1>
-            <p className="text-xs text-rose-300 font-mono bg-rose-950/30 border border-rose-955/20 px-3 py-1 rounded-full inline-block">
+            <p className={`text-sm font-bold font-mono px-4 py-1.5 rounded-full inline-block mt-1 ${isLightMode ? 'bg-rose-50 border border-rose-100 text-rose-700' : 'bg-rose-950/30 border border-rose-900/40 text-rose-300'}`}>
               Aged {characterInfo.age} • Died of: {characterInfo.deathReason || 'Old Age'}
             </p>
           </div>
 
           {/* Stats Summary */}
-          <div className="bg-slate-950 p-4 rounded-2xl border border-slate-850/60 grid grid-cols-2 gap-4 text-left max-w-md mx-auto">
+          <div className={`p-4 rounded-2xl border grid grid-cols-2 gap-4 text-left max-w-md mx-auto mt-4 w-full ${isLightMode ? 'bg-slate-50 border-slate-150' : 'bg-slate-950 border-slate-850/60'}`}>
             <div>
-              <p className="text-[10px] font-mono uppercase text-slate-500">Birthplace</p>
-              <p className="text-xs sm:text-sm font-bold text-white mt-0.5">{characterInfo.country}</p>
+              <p className={`text-[10px] font-bold uppercase ${isLightMode ? 'text-slate-400' : 'text-slate-500'}`}>Birthplace</p>
+              <p className={`text-xs sm:text-sm font-bold mt-0.5 ${isLightMode ? 'text-slate-800' : 'text-white'}`}>{characterInfo.country}</p>
             </div>
             <div>
-              <p className="text-[10px] font-mono uppercase text-slate-500">Last Occupation</p>
-              <p className="text-xs sm:text-sm font-bold text-white mt-0.5">{characterInfo.currentOccupation}</p>
+              <p className={`text-[10px] font-bold uppercase ${isLightMode ? 'text-slate-400' : 'text-slate-500'}`}>Last Occupation</p>
+              <p className={`text-xs sm:text-sm font-bold mt-0.5 ${isLightMode ? 'text-slate-800' : 'text-white'}`}>{characterInfo.currentOccupation}</p>
             </div>
             <div>
-              <p className="text-[10px] font-mono uppercase text-slate-500">Final Net Worth</p>
-              <p className="text-xs sm:text-sm font-bold text-emerald-400 font-mono mt-0.5">{formatCurrency(netWorth)}</p>
+              <p className={`text-[10px] font-bold uppercase ${isLightMode ? 'text-slate-400' : 'text-slate-500'}`}>Final Net Worth</p>
+              <p className="text-xs sm:text-sm font-black text-emerald-500 font-mono mt-0.5">{formatCurrency(netWorth)}</p>
             </div>
             <div>
-              <p className="text-[10px] font-mono uppercase text-slate-500">License Status</p>
-              <p className="text-xs sm:text-sm font-bold text-sky-400 mt-0.5">{characterInfo.hasLicense ? 'Driver' : 'No License'}</p>
+              <p className={`text-[10px] font-bold uppercase ${isLightMode ? 'text-slate-400' : 'text-slate-500'}`}>License Status</p>
+              <p className="text-xs sm:text-sm font-bold text-sky-500 mt-0.5">{characterInfo.hasLicense ? 'Driver' : 'No License'}</p>
             </div>
           </div>
 
           {/* Logs scroll review */}
-          <div className="text-left space-y-2">
-            <h3 className="text-xs uppercase tracking-widest text-slate-400 font-bold border-b border-slate-850 pb-1.5 font-mono">
+          <div className="text-left space-y-2 mt-4 flex-1 flex flex-col justify-end min-h-[160px]">
+            <h3 className={`text-xs uppercase tracking-widest font-bold border-b pb-1.5 font-mono ${isLightMode ? 'text-slate-500 border-slate-100' : 'text-slate-400 border-slate-850'}`}>
               Life Review Timeline
             </h3>
-            <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-850 h-[150px] overflow-y-auto space-y-2.5 text-[11px] leading-relaxed text-slate-400">
+            <div className={`p-3 rounded-2xl border h-[150px] overflow-y-auto space-y-2.5 text-xs font-medium leading-relaxed ${isLightMode ? 'bg-slate-50 border-slate-100 text-slate-600' : 'bg-slate-950/50 border-slate-850 text-slate-400'}`}>
               {log.map((l, index) => (
-                <div key={index} className="border-l border-slate-800 pl-2">
+                <div key={index} className={`border-l pl-2.5 ${isLightMode ? 'border-slate-300' : 'border-slate-800'}`}>
                   {l}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 pt-2">
+          <div className="flex flex-col gap-2 pt-4 mt-4 mb-2">
             <button
               onClick={restartGame}
-              className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-lg hover:shadow-teal-900/25 transition duration-200 active:scale-95"
+              className={`w-full ${isLightMode ? 'bg-green-600 hover:bg-green-500 shadow-green-200' : 'bg-teal-600 hover:bg-teal-500 shadow-teal-950/20'} text-white font-black py-3.5 px-4 rounded-full text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer transform transition duration-200 active:scale-95`}
             >
               <RefreshCw className="w-4 h-4 animate-spin" style={{ animationDuration: '4s' }} /> Start Another Life (New Generation)
             </button>
-            <p className="text-[10px] text-slate-500 font-mono">
-              Your scores were safely preserved in the database below! Check the Ancestors Leaderboard.
+            <p className={`text-[10px] font-bold font-mono ${isLightMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              Your scores were safely preserved in the database! Check the Ancestors Leaderboard.
             </p>
           </div>
         </div>
@@ -542,40 +569,53 @@ export default function App() {
   };
 
   return (
-    <main className="min-h-screen w-full bg-[#05070c] text-slate-100 flex items-center justify-center select-none font-sans p-0 sm:p-4">
+    <main className={`min-h-screen w-full ${isLightMode ? 'bg-[#F1F5F9]' : 'bg-[#0B0F19]'} text-slate-100 flex items-center justify-center select-none font-sans p-0 sm:p-4 transition-colors duration-300`}>
       {/* Central Portrait Mobile Canvas Viewport */}
-      <div className="max-w-[440px] w-full min-h-screen sm:min-h-0 sm:h-[840px] sm:max-h-[92vh] sm:rounded-[36px] sm:border sm:border-slate-800/80 bg-[#090D16] shadow-2xl relative overflow-hidden flex flex-col">
+      <div className={`max-w-[440px] w-full min-h-screen sm:min-h-0 sm:h-[840px] sm:max-h-[92vh] sm:rounded-[36px] sm:border ${isLightMode ? 'bg-white border-slate-200/80 text-slate-800' : 'bg-[#111827] border-slate-800/80 text-slate-100'} shadow-2xl relative overflow-hidden flex flex-col transition-colors duration-300`}>
         
         {/* Top Header Bar */}
-        <div className="bg-[#121826] border-b border-slate-800 px-4 py-3.5 flex flex-col gap-1 shrink-0 z-20">
+        <div className={`border-b px-4 py-3.5 flex flex-col gap-1 shrink-0 z-20 transition-colors duration-300 ${isLightMode ? 'bg-slate-50 border-slate-200' : 'bg-[#1e293b] border-slate-800'}`}>
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-xs font-extrabold text-white tracking-tight flex items-center gap-1.5 font-mono">
+              <h1 className={`text-xs font-black tracking-tight flex items-center gap-1.5 font-mono ${isLightMode ? 'text-slate-950' : 'text-white'}`}>
                 👑 FateLife • {characterInfo.firstName} {characterInfo.lastName}
               </h1>
-              <p className="text-[10px] text-slate-400 font-mono">
+              <p className={`text-[10px] font-bold font-mono ${isLightMode ? 'text-slate-500' : 'text-slate-400'}`}>
                 {characterInfo.gender} from {characterInfo.country} {prisonSentence !== null && '• 🚨 In Prison'}
               </p>
             </div>
-            <div className="text-right">
-              <span className="text-[9px] uppercase font-mono tracking-widest text-slate-500 block leading-none">Age</span>
-              <span className="text-lg font-black text-teal-400 font-sans">{characterInfo.age}</span>
+            
+            <div className="flex items-center gap-3 text-right">
+              {/* Theme Toggle Button */}
+              <button 
+                type="button"
+                onClick={toggleTheme} 
+                className={`p-1.5 rounded-full border transition-all duration-200 cursor-pointer active:scale-95 ${isLightMode ? 'bg-white border-slate-200 text-amber-500 shadow-sm' : 'bg-slate-800 border-slate-700 text-yellow-400'}`}
+                title="Toggle Theme"
+              >
+                {isLightMode ? '☀️' : '🌙'}
+              </button>
+              <div>
+                <span className={`text-[9px] uppercase font-bold tracking-widest block leading-none ${isLightMode ? 'text-slate-400' : 'text-slate-500'}`}>Age</span>
+                <span className={`text-lg font-black font-sans ${isLightMode ? 'text-amber-500' : 'text-amber-400'}`}>{characterInfo.age}</span>
+              </div>
             </div>
           </div>
-          <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-slate-800/40">
-            <span className="text-[11px] font-semibold text-slate-300">Wallet Balance:</span>
-            <span className={`text-xs font-extrabold font-mono ${finances.cashBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          
+          <div className={`flex justify-between items-center mt-1.5 pt-1.5 border-t ${isLightMode ? 'border-slate-200/60' : 'border-slate-800/40'}`}>
+            <span className={`text-[11px] font-extrabold ${isLightMode ? 'text-slate-600' : 'text-slate-300'}`}>Wallet Balance:</span>
+            <span className={`text-xs font-extrabold font-mono ${finances.cashBalance >= 0 ? 'text-green-600' : 'text-rose-500'}`}>
               {formatCurrency(finances.cashBalance)}
             </span>
           </div>
         </div>
 
         {/* Central Core (scrolls dynamically) */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-none pb-28 relative">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-none pb-32 relative">
           {activeTab !== 'journal' && prisonSentence === null && (
             <button
               onClick={() => setActiveTab('journal')}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#121826] hover:bg-slate-800 border border-slate-800/80 text-teal-400 font-extrabold text-xs rounded-2xl transition duration-150 mb-1 cursor-pointer"
+              className={`w-full flex items-center justify-center gap-2 py-3 px-4 border font-black text-xs rounded-full transition duration-150 mb-1 cursor-pointer active:scale-98 ${isLightMode ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200' : 'bg-[#121826] border-slate-800/80 text-teal-400 hover:bg-slate-800'}`}
             >
               ⬅️ Back to Life Timeline
             </button>
@@ -596,41 +636,41 @@ export default function App() {
                 <div className="space-y-6">
                   {/* Category Shortcut directory for school, jobs, relationships, graveyard */}
                   <div>
-                    <h3 className="text-[10px] uppercase font-mono tracking-widest text-slate-500 font-bold mb-2">
+                    <h3 className={`text-xs uppercase tracking-wider font-extrabold mb-2.5 font-sans ${isLightMode ? 'text-slate-500' : 'text-slate-400'}`}>
                       🧭 Quick Navigate Deck
                     </h3>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => setActiveTab('education')}
-                        className="bg-[#121826] border border-slate-800/60 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-800 transition cursor-pointer"
+                        className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition duration-150 cursor-pointer active:scale-95 ${isLightMode ? 'bg-slate-50 border-slate-200 hover:bg-slate-100' : 'bg-[#1a2238] border-slate-800 hover:bg-slate-850'}`}
                       >
                         <span className="text-xl">🎓</span>
-                        <span className="text-[11px] font-bold text-white">School & Study</span>
+                        <span className={`text-[11px] font-black ${isLightMode ? 'text-slate-800' : 'text-white'}`}>School & Study</span>
                       </button>
                       <button
                         onClick={() => setActiveTab('careers')}
-                        className="bg-[#121826] border border-slate-800/60 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-800 transition cursor-pointer"
+                        className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition duration-150 cursor-pointer active:scale-95 ${isLightMode ? 'bg-slate-50 border-slate-200 hover:bg-slate-100' : 'bg-[#1a2238] border-slate-800 hover:bg-slate-850'}`}
                       >
                         <span className="text-xl">💼</span>
-                        <span className="text-[11px] font-bold text-white">Jobs & Careers</span>
+                        <span className={`text-[11px] font-black ${isLightMode ? 'text-slate-800' : 'text-white'}`}>Jobs & Careers</span>
                       </button>
                       <button
                         onClick={() => setActiveTab('relationships')}
-                        className="bg-[#121826] border border-slate-800/60 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-800 transition cursor-pointer"
+                        className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition duration-150 cursor-pointer active:scale-95 ${isLightMode ? 'bg-slate-50 border-slate-200 hover:bg-slate-100' : 'bg-[#1a2238] border-slate-800 hover:bg-slate-850'}`}
                       >
                         <span className="text-xl">👥</span>
-                        <span className="text-[11px] font-bold text-white">Relationships</span>
+                        <span className={`text-[11px] font-black ${isLightMode ? 'text-slate-800' : 'text-white'}`}>Relationships</span>
                       </button>
                       <button
                         onClick={() => setActiveTab('graveyard')}
-                        className="bg-[#121826] border border-slate-800/60 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-800 transition cursor-pointer"
+                        className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition duration-150 cursor-pointer active:scale-95 ${isLightMode ? 'bg-slate-50 border-slate-200 hover:bg-slate-100' : 'bg-[#1a2238] border-slate-800 hover:bg-slate-850'}`}
                       >
                         <span className="text-xl">🪦</span>
-                        <span className="text-[11px] font-bold text-white">Graveyard Hall</span>
+                        <span className={`text-[11px] font-black ${isLightMode ? 'text-slate-800' : 'text-white'}`}>Graveyard Hall</span>
                       </button>
                     </div>
                   </div>
-                  <div className="border-t border-slate-800/40 pt-4">
+                  <div className={`border-t pt-4 ${isLightMode ? 'border-slate-100' : 'border-slate-800/40'}`}>
                     <ActivitiesPanel />
                   </div>
                 </div>
@@ -641,89 +681,99 @@ export default function App() {
         </div>
 
         {/* Sticky Bottom Actions Frame */}
-        <div className="absolute bottom-0 inset-x-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/80 p-4 flex flex-col gap-3 shrink-0 z-30">
+        <div className={`absolute bottom-0 inset-x-0 backdrop-blur-md border-t p-4 flex flex-col gap-3 shrink-0 z-30 transition-colors duration-300 ${isLightMode ? 'bg-white/95 border-slate-200/80 shadow-[0_-8px_20px_rgba(0,0,0,0.03)]' : 'bg-slate-950/95 border-slate-850'}`}>
           <div className="flex items-stretch gap-2.5">
             {/* Assets & Market Button */}
             <button
               onClick={() => setActiveTab(activeTab === 'assets' ? 'journal' : 'assets')}
-              className={`flex-1 py-2 px-1.5 rounded-2xl border text-xs font-bold transition duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer
+              className={`flex-1 py-2.5 px-1.5 rounded-full border text-xs font-black transition duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95
                 ${activeTab === 'assets'
-                  ? 'bg-teal-950/50 text-teal-400 border-teal-500 shadow-md'
-                  : 'bg-[#121826] border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                  ? isLightMode
+                    ? 'bg-slate-100 text-slate-850 border-slate-400 shadow-md'
+                    : 'bg-slate-800 text-white border-slate-600 shadow-md'
+                  : isLightMode
+                    ? 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-850'
+                    : 'bg-[#121826] border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'}`}
             >
-              <span className="text-base">🏠</span>
-              <span className="text-[9px] tracking-tight text-center leading-tight">Assets</span>
+              <span className="text-sm">🏠</span>
+              <span className="text-[10px] font-extrabold tracking-tight text-center leading-tight">Assets</span>
             </button>
 
             {/* AGE UP BUTTON */}
             <button
               onClick={ageUp}
               disabled={currentEvent !== null || activeEventQueue.length > 0 || lastChoiceOutcome !== null}
-              className={`flex-1 py-2 px-1.5 rounded-2xl font-black text-xs flex flex-col items-center justify-center gap-0.5 transition duration-200 shadow-xl border
+              className={`flex-1 py-2.5 px-1.5 rounded-full font-black text-xs flex flex-col items-center justify-center gap-0.5 transition duration-200 shadow-lg border
                 ${(currentEvent !== null || activeEventQueue.length > 0 || lastChoiceOutcome !== null)
-                  ? 'bg-slate-800 border-slate-700 opacity-50 cursor-not-allowed text-slate-500'
-                  : 'bg-emerald-600 border-emerald-500 hover:bg-emerald-500 text-white animate-pulse shadow-emerald-950/40 cursor-pointer'}`}
+                  ? isLightMode
+                    ? 'bg-slate-150 border-slate-200 opacity-60 cursor-not-allowed text-slate-400'
+                    : 'bg-slate-800 border-slate-750 opacity-50 cursor-not-allowed text-slate-500'
+                  : 'bg-green-600 border-green-700 hover:bg-green-500 hover:border-green-600 text-white animate-pulse shadow-green-600/10 cursor-pointer font-black'}`}
               style={{ animationDuration: '2.5s' }}
             >
-              <span className="text-base">⌛</span>
+              <span className="text-sm">⌛</span>
               <span className="text-[10px] tracking-tight font-black uppercase">AGE UP</span>
             </button>
 
             {/* Activities Deck Button */}
             <button
               onClick={() => setActiveTab(activeTab === 'activities' ? 'journal' : 'activities')}
-              className={`flex-1 py-2 px-1.5 rounded-2xl border text-xs font-bold transition duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer
+              className={`flex-1 py-2.5 px-1.5 rounded-full border text-xs font-black transition duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95
                 ${activeTab === 'activities'
-                  ? 'bg-teal-950/50 text-teal-400 border-teal-500 shadow-md'
-                  : 'bg-[#121826] border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                  ? isLightMode
+                    ? 'bg-slate-100 text-slate-850 border-slate-400 shadow-md'
+                    : 'bg-slate-800 text-white border-slate-600 shadow-md'
+                  : isLightMode
+                    ? 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-850'
+                    : 'bg-[#121826] border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'}`}
             >
-              <span className="text-base">🧭</span>
-              <span className="text-[9px] tracking-tight text-center leading-tight">Activities</span>
+              <span className="text-sm">🧭</span>
+              <span className="text-[10px] font-extrabold tracking-tight text-center leading-tight">Activities</span>
             </button>
           </div>
 
           {/* 4 Attributes tight 2x2 grid */}
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-2 border-t border-slate-800/50">
+          <div className={`grid grid-cols-2 gap-x-3 gap-y-1.5 pt-2 border-t ${isLightMode ? 'border-slate-100' : 'border-slate-800/50'}`}>
             {/* Happiness */}
             <div className="flex flex-col gap-0.5">
-              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                <span className="flex items-center gap-1">😊 Happiness</span>
-                <span className="font-mono font-bold text-slate-200">{Math.round(stats.happiness)}%</span>
+              <div className="flex justify-between text-[11px] font-bold">
+                <span className={`flex items-center gap-1 ${isLightMode ? 'text-slate-600' : 'text-slate-400'}`}>😊 Happiness</span>
+                <span className={`font-mono font-bold ${isLightMode ? 'text-slate-800' : 'text-slate-200'}`}>{Math.round(stats.happiness)}%</span>
               </div>
-              <div className="w-full bg-[#121826] h-1.5 rounded-full overflow-hidden border border-slate-800/40">
+              <div className={`w-full ${isLightMode ? 'bg-slate-100 border-slate-200' : 'bg-[#121826] border-slate-800/40'} h-1.5 rounded-full overflow-hidden border`}>
                 <div className={`h-full ${getStatColor(stats.happiness)}`} style={{ width: `${stats.happiness}%` }} />
               </div>
             </div>
 
             {/* Health */}
             <div className="flex flex-col gap-0.5">
-              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                <span className="flex items-center gap-1">❤️ Health</span>
-                <span className="font-mono font-bold text-slate-200">{Math.round(stats.health)}%</span>
+              <div className="flex justify-between text-[11px] font-bold">
+                <span className={`flex items-center gap-1 ${isLightMode ? 'text-slate-600' : 'text-slate-400'}`}>❤️ Health</span>
+                <span className={`font-mono font-bold ${isLightMode ? 'text-slate-800' : 'text-slate-200'}`}>{Math.round(stats.health)}%</span>
               </div>
-              <div className="w-full bg-[#121826] h-1.5 rounded-full overflow-hidden border border-slate-800/40">
+              <div className={`w-full ${isLightMode ? 'bg-slate-100 border-slate-200' : 'bg-[#121826] border-slate-800/40'} h-1.5 rounded-full overflow-hidden border`}>
                 <div className={`h-full ${getStatColor(stats.health)}`} style={{ width: `${stats.health}%` }} />
               </div>
             </div>
 
             {/* Smarts */}
             <div className="flex flex-col gap-0.5">
-              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                <span className="flex items-center gap-1">🎓 Smarts</span>
-                <span className="font-mono font-bold text-slate-200">{Math.round(stats.smarts)}%</span>
+              <div className="flex justify-between text-[11px] font-bold">
+                <span className={`flex items-center gap-1 ${isLightMode ? 'text-slate-600' : 'text-slate-400'}`}>🎓 Smarts</span>
+                <span className={`font-mono font-bold ${isLightMode ? 'text-slate-800' : 'text-slate-200'}`}>{Math.round(stats.smarts)}%</span>
               </div>
-              <div className="w-full bg-[#121826] h-1.5 rounded-full overflow-hidden border border-slate-800/40">
+              <div className={`w-full ${isLightMode ? 'bg-slate-100 border-slate-200' : 'bg-[#121826] border-slate-800/40'} h-1.5 rounded-full overflow-hidden border`}>
                 <div className={`h-full ${getStatColor(stats.smarts)}`} style={{ width: `${stats.smarts}%` }} />
               </div>
             </div>
 
             {/* Looks */}
             <div className="flex flex-col gap-0.5">
-              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                <span className="flex items-center gap-1">✨ Looks</span>
-                <span className="font-mono font-bold text-slate-200">{Math.round(stats.looks)}%</span>
+              <div className="flex justify-between text-[11px] font-bold">
+                <span className={`flex items-center gap-1 ${isLightMode ? 'text-slate-600' : 'text-slate-400'}`}>✨ Looks</span>
+                <span className={`font-mono font-bold ${isLightMode ? 'text-slate-800' : 'text-slate-200'}`}>{Math.round(stats.looks)}%</span>
               </div>
-              <div className="w-full bg-[#121826] h-1.5 rounded-full overflow-hidden border border-slate-800/40">
+              <div className={`w-full ${isLightMode ? 'bg-slate-100 border-slate-200' : 'bg-[#121826] border-slate-800/40'} h-1.5 rounded-full overflow-hidden border`}>
                 <div className={`h-full ${getStatColor(stats.looks)}`} style={{ width: `${stats.looks}%` }} />
               </div>
             </div>
@@ -735,12 +785,12 @@ export default function App() {
           {notifications.map((n) => (
             <div
               key={n.id}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-bold font-mono tracking-wide shadow-lg bg-[#121826]/95 backdrop-blur-md animate-slide-fade pointer-events-auto
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-bold font-mono tracking-wide shadow-lg backdrop-blur-md animate-slide-fade pointer-events-auto
                 ${n.isPositive 
-                  ? 'border-emerald-500/30 text-emerald-400 shadow-emerald-950/10' 
-                  : 'border-rose-500/30 text-rose-400 shadow-rose-950/10'}`}
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800 shadow-emerald-200/20' 
+                  : 'bg-rose-50 border-rose-200 text-rose-800 shadow-rose-200/20'}`}
             >
-              <div className={`p-0.5 rounded-lg ${n.isPositive ? 'bg-emerald-950/40' : 'bg-rose-950/40'}`}>
+              <div className={`p-0.5 rounded-lg ${n.isPositive ? 'bg-emerald-100' : 'bg-rose-100'}`}>
                 {n.icon}
               </div>
               <span>{n.text}</span>

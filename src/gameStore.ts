@@ -85,6 +85,8 @@ interface GameStoreState {
   availablePets: MarketPet[];
   availableRealEstate: PropertyListing[];
   availableVehicles: VehicleListing[];
+  isLightMode: boolean;
+  toggleTheme: () => void;
 
   // Game Engine Actions
   initializeCharacter: () => void;
@@ -403,6 +405,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   availablePets: [],
   availableRealEstate: [],
   availableVehicles: [],
+  isLightMode: typeof window !== 'undefined' ? localStorage.getItem('fatelife_theme') !== 'dark' : true,
+  toggleTheme: () => set((state) => {
+    const next = !state.isLightMode;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('fatelife_theme', next ? 'light' : 'dark');
+    }
+    return { isLightMode: next };
+  }),
 
   initializeCharacter: () => {
     const gender = Math.random() > 0.5 ? 'Male' : 'Female';
