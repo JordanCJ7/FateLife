@@ -12,7 +12,7 @@ export default function LeaderboardPanel() {
   const highScores = useGameStore((state) => state.highScores) || [];
 
   const handleClearScores = () => {
-    localStorage.removeItem('bitlife_replica_high_scores');
+    localStorage.removeItem('fatelife_high_scores');
     useGameStore.setState({ highScores: [] });
   };
 

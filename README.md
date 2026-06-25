@@ -1,7 +1,7 @@
-# 🧬 AlterEgo: The Definitive Text-Based Life Simulator
+# 🧬 FateLife: The Definitive Text-Based Life Simulator
 
 <p align="center">
-  <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200&h=450" alt="AlterEgo Life Journey Banner" width="100%" referrerPolicy="no-referrer" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+  <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200&h=450" alt="FateLife Life Journey Banner" width="100%" referrerPolicy="no-referrer" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
 </p>
 
 <p align="center">
@@ -16,7 +16,7 @@
 
 ## 🌟 The Vision
 
-**AlterEgo** is an immersive, completely client-side, text-based life simulation engine. Seamlessly blending the rich, sandbox-style decision matrix of classic simulation with elegant, high-contrast modern web interfaces, AlterEgo invites players to forge their own paths through billions of life-path variations.
+**FateLife** is an immersive, completely client-side, text-based life simulation engine. Seamlessly blending the rich, sandbox-style decision matrix of classic simulation with elegant, high-contrast modern web interfaces, FateLife invites players to forge their own paths through billions of life-path variations.
 
 From your very first breath to your golden years, every tap of the **Age** button advances your personal narrative. Will you become a high-earning brain surgeon, a real-estate mogul, a loving parent, or an infamous mastermind running from the law? Your destiny is entirely in your hands.
 
@@ -115,7 +115,7 @@ Seek comfort and joy through extensive veterinary and pet adoption panels:
 
 ## 🛠️ Technical Design & Craftsmanship
 
-AlterEgo represents a masterclass in modern, client-side, zero-database state management.
+FateLife represents a masterclass in modern, client-side, zero-database state management.
 
 ```
                   ┌────────────────────────────────────────┐
@@ -176,4 +176,4 @@ Static static files are rendered securely to the `/dist` directory.
 Licensed under the Apache License, Version 2.0 (the "License"). You may obtain a copy of the License at:
 http://www.apache.org/licenses/LICENSE-2.0
 
-*AlterEgo — Write your legacy, one decision at a time.*
+*FateLife — Write your legacy, one decision at a time.*

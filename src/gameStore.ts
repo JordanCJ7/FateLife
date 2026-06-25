@@ -136,7 +136,7 @@ interface GameStoreState {
   hireHitman: (targetId: string) => { success: boolean; msg: string };
 }
 
-const STORAGE_KEY = 'bitlife_replica_high_scores';
+const STORAGE_KEY = 'fatelife_high_scores';
 
 function loadHighScores(): HighScore[] {
   try {

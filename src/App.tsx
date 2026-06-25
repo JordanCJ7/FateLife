@@ -344,10 +344,10 @@ export default function App() {
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1 bg-slate-800 text-teal-400 font-mono text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-full border border-slate-700/60 shadow">
               <Sparkles className="w-3.5 h-3.5 text-teal-400 animate-spin" style={{ animationDuration: '6s' }} />
-              Rule-Based BitLife Core
+              Rule-Based FateLife Core
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 sm:text-4xl">
-              BITLIFE <span className="text-teal-400">REPLICA</span>
+              FATE<span className="text-teal-400">LIFE</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
               Experience a completely client-side, deterministic life simulation. Drive careers, study hard, buy real estate, gamble, adapt to random life events, and survive the test of time!
@@ -445,7 +445,7 @@ export default function App() {
           <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
             <p className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
               <Scale className="w-3.5 h-3.5 text-slate-600" />
-              This replica runs 100% locally on standard Math.random() probability trees. No servers.
+              This simulation runs 100% locally on standard Math.random() probability trees. No servers.
             </p>
           </div>
         </div>
@@ -538,7 +538,7 @@ export default function App() {
       <div className="max-w-7xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs gap-2">
         <div className="flex items-center gap-2">
           <Baby className="w-4 h-4 text-teal-400 animate-pulse" />
-          <span className="font-bold text-slate-200">BitLife Core Engine v1.0.0</span>
+          <span className="font-bold text-slate-200">FateLife Engine v1.0.0</span>
           <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-900/30 px-2 py-0.5 rounded-full font-mono">
             Deterministic Probability Off
           </span>
