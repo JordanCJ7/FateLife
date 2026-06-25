@@ -42,13 +42,16 @@ export default function CourtroomModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-xs flex flex-col justify-end z-50 animate-fade-in">
       <div 
         id="court_trial_panel" 
-        className="max-w-2xl w-full bg-slate-900 border-2 border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden"
+        className="w-full max-h-[75%] bg-[#121826] border-t border-slate-800 rounded-t-[32px] p-5 shadow-2xl flex flex-col gap-4 relative overflow-y-auto animate-slide-up"
+        style={{ 
+          boxShadow: '0 -10px 40px -10px rgba(0, 0, 0, 0.8)'
+        }}
       >
         {/* Banner stripes */}
-        <div className="absolute top-0 inset-x-0 h-2.5 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 animate-pulse" />
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 animate-pulse" />
 
         {/* Phase 1: Unresolved Trial Defense Selection */}
         {!trialResult?.resolved ? (

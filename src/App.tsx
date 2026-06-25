@@ -331,121 +331,123 @@ export default function App() {
     setActiveTab('journal');
   };
 
-  // If character is not initialized, render the Character Creator landing card
+  // If character is not initialized, render the Character Creator landing card in the portrait container
   if (!characterInfo) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div id="welcome_setup_card" className="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden">
+      <main className="min-h-screen w-full bg-[#05070c] text-slate-100 flex items-center justify-center select-none font-sans p-0 sm:p-4 animate-fade-in">
+        <div id="welcome_setup_card" className="max-w-[440px] w-full min-h-screen sm:min-h-0 sm:h-[840px] sm:max-h-[92vh] sm:rounded-[36px] sm:border sm:border-slate-800/80 bg-[#090D16] shadow-2xl relative overflow-y-auto flex flex-col p-6 scrollbar-none">
           {/* Decorative glows */}
-          <div className="absolute top-0 left-0 w-44 h-44 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-44 h-44 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 left-0 w-44 h-44 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-44 h-44 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
           {/* Heading */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-1 bg-slate-800 text-teal-400 font-mono text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-full border border-slate-700/60 shadow">
-              <Sparkles className="w-3.5 h-3.5 text-teal-400 animate-spin" style={{ animationDuration: '6s' }} />
-              Rule-Based FateLife Core
+          <div className="text-center space-y-2 mt-4">
+            <div className="inline-flex items-center gap-1 bg-[#121826] text-teal-400 font-mono text-[9px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-full border border-slate-800 shadow-sm">
+              <Sparkles className="w-3 h-3 text-teal-400 animate-spin" style={{ animationDuration: '6s' }} />
+              FateLife Engine v1.0.0
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 sm:text-4xl">
+            <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1">
               FATE<span className="text-teal-400">LIFE</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
-              Experience a completely client-side, deterministic life simulation. Drive careers, study hard, buy real estate, gamble, adapt to random life events, and survive the test of time!
+            <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+              Experience a mobile-first, deterministic life simulation. Drive careers, study hard, buy real estate, gamble, adapt to events, and survive the test of time!
             </p>
           </div>
 
           {/* Setup Form */}
-          <form onSubmit={handleConceive} className="space-y-4 pt-2 border-t border-slate-800/80">
-            <h2 className="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase">Conceive New Character</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">First Name</label>
-                <input 
-                  type="text" 
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="e.g. Brandon"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500 font-sans shadow-inner placeholder-slate-600 transition"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Last Name</label>
-                <input 
-                  type="text" 
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="e.g. Miller"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500 font-sans shadow-inner placeholder-slate-600 transition"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-2">Biological Gender</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setGender('Male')}
-                    className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-xl border transition-all ${
-                      gender === 'Male'
-                        ? 'bg-teal-900/30 border-teal-500 text-teal-300 shadow-md shadow-teal-950/20'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    Male
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setGender('Female')}
-                    className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-xl border transition-all ${
-                      gender === 'Female'
-                        ? 'bg-pink-900/20 border-pink-500 text-pink-300 shadow-md shadow-pink-950/10'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    Female
-                  </button>
+          <form onSubmit={handleConceive} className="space-y-4 pt-4 border-t border-slate-800/80 mt-4 flex-1 flex flex-col justify-between">
+            <div className="space-y-4">
+              <h2 className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Conceive New Character</h2>
+              
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">First Name</label>
+                  <input 
+                    type="text" 
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Random Name"
+                    className="w-full bg-[#121826] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-sans shadow-inner placeholder-slate-600 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">Last Name</label>
+                  <input 
+                    type="text" 
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Random Surname"
+                    className="w-full bg-[#121826] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-sans shadow-inner placeholder-slate-600 transition"
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Country of Birth</label>
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 font-sans"
-                >
-                  {COUNTRIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">Biological Gender</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGender('Male')}
+                      className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all ${
+                        gender === 'Male'
+                          ? 'bg-teal-950/40 border-teal-500 text-teal-300 shadow-sm'
+                          : 'bg-[#121826] border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      Male
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGender('Female')}
+                      className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all ${
+                        gender === 'Female'
+                          ? 'bg-pink-950/20 border-pink-500 text-pink-300 shadow-sm'
+                          : 'bg-[#121826] border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      Female
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">Country of Birth</label>
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full bg-[#121826] border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-teal-500 font-sans cursor-pointer"
+                  >
+                    {COUNTRIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 pt-4">
+            <div className="flex flex-col gap-2 pt-4 mt-auto">
               <button
                 type="submit"
-                className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all duration-200 transform shadow-lg hover:shadow-teal-900/30 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all duration-200 transform shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Baby className="w-4 h-4 text-white" /> Conceive Custom Character
               </button>
               <button
                 type="button"
                 onClick={handleQuickStart}
-                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-750 text-teal-300 font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
+                className="w-full bg-[#121826] hover:bg-slate-800 border border-slate-800 text-teal-400 font-bold py-2.5 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
               >
-                Quick Generation (Random Name & Birthplace)
+                Quick Start (Randomized Life)
               </button>
             </div>
           </form>
 
           {/* Footer warning */}
-          <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
-            <p className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
-              <Scale className="w-3.5 h-3.5 text-slate-600" />
-              This simulation runs 100% locally on standard Math.random() probability trees. No servers.
+          <div className="bg-[#121826] p-3 rounded-2xl border border-slate-800/85 text-center mt-4 mb-2">
+            <p className="text-[9px] text-slate-500 flex items-center justify-center gap-1">
+              <Scale className="w-3 h-3 text-slate-600" />
+              Runs 100% locally on standard probability trees.
             </p>
           </div>
         </div>
@@ -532,135 +534,225 @@ export default function App() {
     );
   }
 
+  const getStatColor = (val: number) => {
+    if (val >= 80) return 'bg-emerald-500';
+    if (val >= 50) return 'bg-teal-500';
+    if (val >= 25) return 'bg-amber-500';
+    return 'bg-rose-500';
+  };
+
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 p-4 lg:p-6 select-none font-sans">
-      {/* Top micro ribbon */}
-      <div className="max-w-7xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs gap-2">
-        <div className="flex items-center gap-2">
-          <Baby className="w-4 h-4 text-teal-400 animate-pulse" />
-          <span className="font-bold text-slate-200">FateLife Engine v1.0.0</span>
-          <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-900/30 px-2 py-0.5 rounded-full font-mono">
-            Deterministic Probability Off
-          </span>
-        </div>
-        <div className="flex items-center gap-4 text-slate-400 font-mono">
-          <span>Country: <strong className="text-white">{characterInfo.country}</strong></span>
-          <span>License: <strong className={characterInfo.hasLicense ? 'text-sky-400' : 'text-slate-500'}>{characterInfo.hasLicense ? 'YES' : 'NO'}</strong></span>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <main className="min-h-screen w-full bg-[#05070c] text-slate-100 flex items-center justify-center select-none font-sans p-0 sm:p-4">
+      {/* Central Portrait Mobile Canvas Viewport */}
+      <div className="max-w-[440px] w-full min-h-screen sm:min-h-0 sm:h-[840px] sm:max-h-[92vh] sm:rounded-[36px] sm:border sm:border-slate-800/80 bg-[#090D16] shadow-2xl relative overflow-hidden flex flex-col">
         
-        {/* Left column: Stats summary (lg:col-span-4) */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          <StatsPanel />
-          
-          {/* Main big Age Up command module */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-4 relative overflow-hidden align-middle justify-center">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
-            
+        {/* Top Header Bar */}
+        <div className="bg-[#121826] border-b border-slate-800 px-4 py-3.5 flex flex-col gap-1 shrink-0 z-20">
+          <div className="flex justify-between items-center">
             <div>
-              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none">Primary Loop Action</p>
-              <h3 className="text-sm font-bold text-white mt-1">Advance Life Clock</h3>
+              <h1 className="text-xs font-extrabold text-white tracking-tight flex items-center gap-1.5 font-mono">
+                👑 FateLife • {characterInfo.firstName} {characterInfo.lastName}
+              </h1>
+              <p className="text-[10px] text-slate-400 font-mono">
+                {characterInfo.gender} from {characterInfo.country} {prisonSentence !== null && '• 🚨 In Prison'}
+              </p>
             </div>
-
-            <button
-              onClick={ageUp}
-              disabled={currentEvent !== null || activeEventQueue.length > 0 || lastChoiceOutcome !== null}
-              className={`w-full text-white font-extrabold text-sm sm:text-base py-4 px-5 rounded-2xl transition duration-200 shadow-xl flex items-center justify-center gap-2 outline-none focus:ring-2 focus:ring-emerald-500 group
-                ${(currentEvent !== null || activeEventQueue.length > 0 || lastChoiceOutcome !== null)
-                  ? 'bg-slate-800 opacity-50 cursor-not-allowed text-slate-500'
-                  : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-emerald-900/20 active:scale-95 cursor-pointer'}`}
-            >
-              <Hourglass className="w-5 h-5 text-emerald-100 group-hover:rotate-180 transition duration-500" />
-              {currentEvent !== null || activeEventQueue.length > 0 ? 'RESOLVE CURRENT SCENARIO' : 'AGE UP (+1 YEAR)'}
-            </button>
-
-            {/* Quick Micro finance preview */}
-            <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 bg-slate-950 p-2.5 rounded-xl border border-slate-850">
-              {prisonSentence !== null ? (
-                <span className="text-rose-400 font-bold tracking-wider mx-auto text-center">INCARCERATION LIMITS ACTIVE</span>
-              ) : (
-                <>
-                  <span>Income: +{formatCurrency(finances.annualSalary)}</span>
-                  <span>•</span>
-                  <span>Outflows: -{formatCurrency(assets.reduce((sum, a) => sum + a.annualUpkeep, 0) + finances.annualDebt)}</span>
-                </>
-              )}
+            <div className="text-right">
+              <span className="text-[9px] uppercase font-mono tracking-widest text-slate-500 block leading-none">Age</span>
+              <span className="text-lg font-black text-teal-400 font-sans">{characterInfo.age}</span>
             </div>
+          </div>
+          <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-slate-800/40">
+            <span className="text-[11px] font-semibold text-slate-300">Wallet Balance:</span>
+            <span className={`text-xs font-extrabold font-mono ${finances.cashBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {formatCurrency(finances.cashBalance)}
+            </span>
           </div>
         </div>
 
-        {/* Center column: Dashboard Tabs (lg:col-span-8) */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+        {/* Central Core (scrolls dynamically) */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-none pb-28 relative">
+          {activeTab !== 'journal' && prisonSentence === null && (
+            <button
+              onClick={() => setActiveTab('journal')}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#121826] hover:bg-slate-800 border border-slate-800/80 text-teal-400 font-extrabold text-xs rounded-2xl transition duration-150 mb-1 cursor-pointer"
+            >
+              ⬅️ Back to Life Timeline
+            </button>
+          )}
+
           {prisonSentence !== null ? (
-            <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 shadow-2xl min-h-[480px]">
+            <div className="animate-slide-up">
               <PrisonYardPanel />
             </div>
           ) : (
             <>
-              {/* Tab Selection Row */}
-              <div className="bg-slate-900 border border-slate-805/80 p-1.5 rounded-2xl flex flex-wrap gap-1 shadow-md">
-                {[
-                  { id: 'journal', label: 'Life Timeline', icon: <Calendar className="w-4 h-4" /> },
-                  { id: 'education', label: 'Education', icon: <GraduationCap className="w-4 h-4 text-emerald-400" /> },
-                  { id: 'relationships', label: 'Relationships', icon: <Users className="w-4 h-4" /> },
-                  { id: 'careers', label: 'Occupation Board', icon: <Briefcase className="w-4 h-4" /> },
-                  { id: 'assets', label: 'Assets & Market', icon: <Home className="w-4 h-4" /> },
-                  { id: 'activities', label: 'Activities Deck', icon: <Compass className="w-4 h-4" /> },
-                  { id: 'graveyard', label: 'Ancestors Index', icon: <Trophy className="w-4 h-4" /> },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveTab(t.id as any)}
-                    className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer outline-none
-                    ${activeTab === t.id 
-                      ? 'bg-slate-800 text-teal-400 shadow shadow-slate-950 border border-slate-700/50' 
-                      : 'text-slate-400 hover:text-white hover:bg-slate-950/40'}`}
-                  >
-                    {t.icon}
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Active Panel View */}
-              <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 shadow-2xl min-h-[480px]">
-                {activeTab === 'journal' && <TimelineLog />}
-                {activeTab === 'education' && <EducationPanel />}
-                {activeTab === 'relationships' && <RelationshipsPanel />}
-                {activeTab === 'careers' && <CareersPanel />}
-                {activeTab === 'assets' && <AssetsPanel />}
-                {activeTab === 'activities' && <ActivitiesPanel />}
-                {activeTab === 'graveyard' && <LeaderboardPanel />}
-              </div>
+              {activeTab === 'journal' && <TimelineLog />}
+              {activeTab === 'education' && <EducationPanel />}
+              {activeTab === 'relationships' && <RelationshipsPanel />}
+              {activeTab === 'careers' && <CareersPanel />}
+              {activeTab === 'assets' && <AssetsPanel />}
+              {activeTab === 'activities' && (
+                <div className="space-y-6">
+                  {/* Category Shortcut directory for school, jobs, relationships, graveyard */}
+                  <div>
+                    <h3 className="text-[10px] uppercase font-mono tracking-widest text-slate-500 font-bold mb-2">
+                      🧭 Quick Navigate Deck
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setActiveTab('education')}
+                        className="bg-[#121826] border border-slate-800/60 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-800 transition cursor-pointer"
+                      >
+                        <span className="text-xl">🎓</span>
+                        <span className="text-[11px] font-bold text-white">School & Study</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('careers')}
+                        className="bg-[#121826] border border-slate-800/60 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-800 transition cursor-pointer"
+                      >
+                        <span className="text-xl">💼</span>
+                        <span className="text-[11px] font-bold text-white">Jobs & Careers</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('relationships')}
+                        className="bg-[#121826] border border-slate-800/60 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-800 transition cursor-pointer"
+                      >
+                        <span className="text-xl">👥</span>
+                        <span className="text-[11px] font-bold text-white">Relationships</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('graveyard')}
+                        className="bg-[#121826] border border-slate-800/60 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-800 transition cursor-pointer"
+                      >
+                        <span className="text-xl">🪦</span>
+                        <span className="text-[11px] font-bold text-white">Graveyard Hall</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-800/40 pt-4">
+                    <ActivitiesPanel />
+                  </div>
+                </div>
+              )}
+              {activeTab === 'graveyard' && <LeaderboardPanel />}
             </>
           )}
         </div>
-      </div>
 
-      {/* Floating Stat Shift Notifications */}
-      <div className="fixed top-16 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm">
-        {notifications.map((n) => (
-          <div
-            key={n.id}
-            className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl border text-xs font-bold font-mono tracking-wide shadow-xl bg-slate-900/95 backdrop-blur-md animate-slide-fade pointer-events-auto
-              ${n.isPositive 
-                ? 'border-emerald-500/30 text-emerald-400 shadow-emerald-950/20' 
-                : 'border-rose-500/30 text-rose-400 shadow-rose-950/20'}`}
-          >
-            <div className={`p-1 rounded-lg ${n.isPositive ? 'bg-emerald-950/40' : 'bg-rose-950/40'}`}>
-              {n.icon}
-            </div>
-            <span>{n.text}</span>
+        {/* Sticky Bottom Actions Frame */}
+        <div className="absolute bottom-0 inset-x-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/80 p-4 flex flex-col gap-3 shrink-0 z-30">
+          <div className="flex items-stretch gap-2.5">
+            {/* Assets & Market Button */}
+            <button
+              onClick={() => setActiveTab(activeTab === 'assets' ? 'journal' : 'assets')}
+              className={`flex-1 py-2 px-1.5 rounded-2xl border text-xs font-bold transition duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer
+                ${activeTab === 'assets'
+                  ? 'bg-teal-950/50 text-teal-400 border-teal-500 shadow-md'
+                  : 'bg-[#121826] border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <span className="text-base">🏠</span>
+              <span className="text-[9px] tracking-tight text-center leading-tight">Assets</span>
+            </button>
+
+            {/* AGE UP BUTTON */}
+            <button
+              onClick={ageUp}
+              disabled={currentEvent !== null || activeEventQueue.length > 0 || lastChoiceOutcome !== null}
+              className={`flex-1 py-2 px-1.5 rounded-2xl font-black text-xs flex flex-col items-center justify-center gap-0.5 transition duration-200 shadow-xl border
+                ${(currentEvent !== null || activeEventQueue.length > 0 || lastChoiceOutcome !== null)
+                  ? 'bg-slate-800 border-slate-700 opacity-50 cursor-not-allowed text-slate-500'
+                  : 'bg-emerald-600 border-emerald-500 hover:bg-emerald-500 text-white animate-pulse shadow-emerald-950/40 cursor-pointer'}`}
+              style={{ animationDuration: '2.5s' }}
+            >
+              <span className="text-base">⌛</span>
+              <span className="text-[10px] tracking-tight font-black uppercase">AGE UP</span>
+            </button>
+
+            {/* Activities Deck Button */}
+            <button
+              onClick={() => setActiveTab(activeTab === 'activities' ? 'journal' : 'activities')}
+              className={`flex-1 py-2 px-1.5 rounded-2xl border text-xs font-bold transition duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer
+                ${activeTab === 'activities'
+                  ? 'bg-teal-950/50 text-teal-400 border-teal-500 shadow-md'
+                  : 'bg-[#121826] border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <span className="text-base">🧭</span>
+              <span className="text-[9px] tracking-tight text-center leading-tight">Activities</span>
+            </button>
           </div>
-        ))}
-      </div>
 
-      {/* Pop-up Modals for state-directed gameplay */}
-      <EventModal />
-      <OutcomeModal />
-      <CourtroomModal />
+          {/* 4 Attributes tight 2x2 grid */}
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-2 border-t border-slate-800/50">
+            {/* Happiness */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                <span className="flex items-center gap-1">😊 Happiness</span>
+                <span className="font-mono font-bold text-slate-200">{Math.round(stats.happiness)}%</span>
+              </div>
+              <div className="w-full bg-[#121826] h-1.5 rounded-full overflow-hidden border border-slate-800/40">
+                <div className={`h-full ${getStatColor(stats.happiness)}`} style={{ width: `${stats.happiness}%` }} />
+              </div>
+            </div>
+
+            {/* Health */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                <span className="flex items-center gap-1">❤️ Health</span>
+                <span className="font-mono font-bold text-slate-200">{Math.round(stats.health)}%</span>
+              </div>
+              <div className="w-full bg-[#121826] h-1.5 rounded-full overflow-hidden border border-slate-800/40">
+                <div className={`h-full ${getStatColor(stats.health)}`} style={{ width: `${stats.health}%` }} />
+              </div>
+            </div>
+
+            {/* Smarts */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                <span className="flex items-center gap-1">🎓 Smarts</span>
+                <span className="font-mono font-bold text-slate-200">{Math.round(stats.smarts)}%</span>
+              </div>
+              <div className="w-full bg-[#121826] h-1.5 rounded-full overflow-hidden border border-slate-800/40">
+                <div className={`h-full ${getStatColor(stats.smarts)}`} style={{ width: `${stats.smarts}%` }} />
+              </div>
+            </div>
+
+            {/* Looks */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                <span className="flex items-center gap-1">✨ Looks</span>
+                <span className="font-mono font-bold text-slate-200">{Math.round(stats.looks)}%</span>
+              </div>
+              <div className="w-full bg-[#121826] h-1.5 rounded-full overflow-hidden border border-slate-800/40">
+                <div className={`h-full ${getStatColor(stats.looks)}`} style={{ width: `${stats.looks}%` }} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Stat Shift Notifications */}
+        <div className="absolute top-16 right-4 z-50 flex flex-col gap-1.5 pointer-events-none max-w-[280px]">
+          {notifications.map((n) => (
+            <div
+              key={n.id}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-bold font-mono tracking-wide shadow-lg bg-[#121826]/95 backdrop-blur-md animate-slide-fade pointer-events-auto
+                ${n.isPositive 
+                  ? 'border-emerald-500/30 text-emerald-400 shadow-emerald-950/10' 
+                  : 'border-rose-500/30 text-rose-400 shadow-rose-950/10'}`}
+            >
+              <div className={`p-0.5 rounded-lg ${n.isPositive ? 'bg-emerald-950/40' : 'bg-rose-950/40'}`}>
+                {n.icon}
+              </div>
+              <span>{n.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Pop-up Modals (absolute-rendered overlays) */}
+        <EventModal />
+        <OutcomeModal />
+        <CourtroomModal />
+      </div>
     </main>
   );
 }
